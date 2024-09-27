@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 7031907a3cf064f689a4f0906183bd0e
+timeCreated: 1506347962
+licenseType: Store
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: RF Krabuler
+  fontNames:
+  - RF Krabuler
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

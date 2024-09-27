@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 708036ef7e9b848e0b6a8a4e11e41d3a
+timeCreated: 1516711498
+licenseType: Store
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Tw Cen MT Condensed Extra Bold
+  fontNames:
+  - Tw Cen MT Condensed Extra Bold
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: bd7f5f13200ec40edbb9ab7147ce294c, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
