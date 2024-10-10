@@ -7,15 +7,17 @@ namespace Project_Data.Scripts
 {
     public enum TutorialStep
     {
-        UnlockFactory, //Mở khoá nhà máy
-        FarmerWork, //Mở khoá cừu
-        UnlockFarmHouse,
-        StartTruck,
-        UnlockWareHouse,
+        UnlockFactory, //Mở khoá nhà máy mặc định đã mở
+        FarmerWork, // Cho farmmer lam2 viec
+        UnlockFarmHouse, //mo khoa nha2 cu7u
+        UnlockWareHouse, 
         HorseWork,
+        HireManager,
         OpenLevelUpPopup,
         BuyUpgrade,
-        CloseUpgrade
+        CloseUpgrade,
+        StartTruck
+
     }
 
     public class TutorialManager : MonoBehaviour
@@ -46,12 +48,13 @@ namespace Project_Data.Scripts
             //Kiềm tra đã hướng dẫn chưa
             isCompleted = PlayerPrefs.GetInt("TutorialCompleted" + postFix, 0) == 0 ? false : true;
 
-            Debug.Log("TutorialManager  isCompleted" + isCompleted);
+          
             StartCoroutine("lateStart");
         }
 
         IEnumerator lateStart()
         {
+            //Debug.Log("TutorialManager kiem tra huong dan buoc may");
             yield return new WaitForSeconds(0.2f);
             int step = PlayerPrefs.GetInt("TutorialStep" + postFix, 0);
 
@@ -82,14 +85,14 @@ namespace Project_Data.Scripts
                 return;
 
             //Hướng dẫn người chơi
-            Debug.Log("Huongdan Step");
+          //  Debug.Log("TutorialManager  Step");
             if (isTutorialWaiting)
             {
                 return;
             }
 
-            int step = PlayerPrefs.GetInt("TutorialStep" + postFix, 0);
-            Debug.Log("Huongdan nguoi choi step " + step);
+            int step = PlayerPrefs.GetInt("TutorialStep" + postFix, 1);
+            //Debug.Log("TutorialManager nguoi choi step " + step);
             hideSteps();
 
             //Bước cuối cùng
@@ -99,34 +102,44 @@ namespace Project_Data.Scripts
             }
            
             
-            if (step < steps.Count && step != 0 && step!=5)
-                steps[step].SetActive(true);
+            if (step < steps.Count && step != 0)
+            {
+                //Hien pop huong dan tung buoc
+                if (steps[step] != null)
+                {
+                    steps[step].SetActive(true);
+                }
+            }
 
-            if (step == 2)
-            {
-                GameManager.Instance.liftHandler.unlockTruck(true);
-                GameManager.Instance.liftHandler.unlockTruck(true);
-            }
-            if (step == 3)
-            {
-                Debug.Log("NHan nut xe chay");
-                GameManager.Instance.tutorialManager.updateStep(TutorialStep.UnlockWareHouse);
-            }
-            else if (step == 4)
-            {
-                GameManager.Instance.wareHouseHandler.unlockWarehouse(true);
-            }
-            else if (step == 6)
-            {
-                GameManager.Instance.tutorialManager.tutorialCompleted();
-            }
-            
+
+            //if (step == 2)
+            //{
+            //    GameManager.Instance.liftHandler.unlockTruck(true);
+
+            //}
+
+            //if (step == 3)
+            //{
+            //    Debug.Log("NHan nut xe chay");
+            //    GameManager.Instance.tutorialManager.updateStep(TutorialStep.UnlockWareHouse);
+            //}
+            //else if (step == 4)
+            //{
+            //    GameManager.Instance.wareHouseHandler.unlockWarehouse(true);
+            //}
+            //else if (step == 6)
+            //{
+            //    GameManager.Instance.tutorialManager.tutorialCompleted();
+
+            //}
+
 
 
         }
 
         public void updateStep(TutorialStep eStepNo)
         {
+            //("2 TutorialManager cap nhat buoc "+ eStepNo);
             //Cập nhật Hướng dẫn các bước
             if (isTutorialWaiting)
             {
@@ -135,13 +148,13 @@ namespace Project_Data.Scripts
 
             int stepNo = (int)eStepNo;
             hideSteps();
-            int step = PlayerPrefs.GetInt("TutorialStep" + postFix, 0);
+            int step = PlayerPrefs.GetInt("TutorialStep" + postFix, 1);
 
-            Debug.Log("Tutorail buoc so " + stepNo + " step: " + step);
+           // Debug.Log("Tutorail buoc so " + stepNo + " step: " + step);
 
             if (stepNo == step + 1)
             {
-               
+               // Debug.Log("2 TutorialManager luu lai " + eStepNo);
                 sendCallbacks(eStepNo);
                 PlayerPrefs.SetInt("TutorialStep" + postFix, stepNo);
                 showSpeechBubble(stepNo);
@@ -149,6 +162,7 @@ namespace Project_Data.Scripts
             else
             {
                
+
                 showStep();
             }
         }
@@ -157,28 +171,29 @@ namespace Project_Data.Scripts
         {
             for (int i = 0; i < steps.Count; i++)
             {
-                if (i != 5)
+                if (steps[i] != null)
                 {
                     steps[i].SetActive(false);
                 }
-               
+
             }
             farmer2TapObj.SetActive(false);
         }
 
         public void showSpeechBubble(int stepNo)
         {
-            Debug.Log("showSpeechBubble " + stepNo);
+            //Debug.Log("showSpeechBubble " + stepNo);
             if (stepNo < steps.Count)
             {
                 //AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.TutorialStep, stepNo);
-                Debug.Log("ShowMessageWithIcon  " + stepNo);
+                //Debug.Log("ShowMessageWithIcon  " + stepNo);
                 Speech.Instance.ShowMessageWithIcon("");
             }
         }
 
         public void speechBubbleCloseCB()
         {
+          //  Debug.Log("TutorialManager speechBubbleCloseCB");
             showStep();
         }
 
@@ -196,12 +211,12 @@ namespace Project_Data.Scripts
 
         void sendCallbacks(TutorialStep step)
         {
-          
+            //Debug.Log(" TutorialManager sendCallbacks " + step);
             int factoryCount = GameManager.Instance.factoryList.Count;
             if(step == TutorialStep.StartTruck)
             {
                
-                 Debug.Log(" Tutorail 6.Sau khi mo khoá nhà kho băng chuyền");
+                 //Debug.Log(" Tutorail 6.Sau khi mo khoá nhà kho băng chuyền");
                 GameManager.Instance.liftHandler.tutorialCallback(step);
             }
             else if(step == TutorialStep.HorseWork)
@@ -210,7 +225,9 @@ namespace Project_Data.Scripts
             }
             else if(step == TutorialStep.UnlockFarmHouse)
             {
-                Debug.Log("Tutorail 3. Sau khi mo khoá Farm");
+                //Debug.Log("Tutorail 3. Sau khi mo khoá Farm");
+              //  Debug.Log("TutorialManager hien nut mo khoa bang chuyen");
+                //Khi con cu7u di chuyen xong thi mo khoa nha cuu
                 GameManager.Instance.liftHandler.tutorialCallback(step);
             }
             else if(step == TutorialStep.UnlockWareHouse)
@@ -281,10 +298,10 @@ namespace Project_Data.Scripts
           
             ManagerSelection managerHandler = GameManager.Instance.managerSelection;
             GameObject farmerTapObj = steps[(int)TutorialStep.FarmerWork];
-            GameObject truckTapObj  = steps[(int)TutorialStep.StartTruck];
+            //GameObject truckTapObj  = steps[(int)TutorialStep.StartTruck];
            // GameObject horseTapObj  = steps[(int)TutorialStep.HorseWork];
 
-            if (farmerTapObj.activeSelf || truckTapObj.activeSelf  || farmer2TapObj.activeSelf)
+            if (farmerTapObj.activeSelf  /*truckTapObj.activeSelf */ || farmer2TapObj.activeSelf)
             {
                 return;
             }
@@ -299,7 +316,7 @@ namespace Project_Data.Scripts
             if (farmManager != null && elevatorManager != null && warehouseManager != null && farmManager2 != null)
             {
                 farmerTapObj.SetActive(false);
-                truckTapObj.SetActive(false);
+                //truckTapObj.SetActive(false);
                 //horseTapObj.SetActive(false);
                 farmer2TapObj.SetActive(false);
 
@@ -351,7 +368,7 @@ namespace Project_Data.Scripts
                                               && GameManager.Instance.liftHandler.getProfits() >= 1)
             {
                 farmerTapObj.SetActive(false);
-                truckTapObj.SetActive(false);
+                //truckTapObj.SetActive(false);
                 //horseTapObj.SetActive(true);
                 farmer2TapObj.SetActive(false);
 
@@ -364,7 +381,7 @@ namespace Project_Data.Scripts
                                              && GameManager.Instance.factoryList[0].getProfitsAndClear() >= 1)
             {
                 farmerTapObj.SetActive(false);
-                truckTapObj.SetActive(true);
+                //truckTapObj.SetActive(true);
                 //horseTapObj.SetActive(false);
                 farmer2TapObj.SetActive(false);
 
@@ -376,7 +393,7 @@ namespace Project_Data.Scripts
             else if (farmManager == null && factoryCount > 0 && !GameManager.Instance.factoryList[0].isOnWork())
             {
                 farmerTapObj.SetActive(true);
-                truckTapObj.SetActive(false);
+                //truckTapObj.SetActive(false);
                 //horseTapObj.SetActive(false);
                 farmer2TapObj.SetActive(false);
 
@@ -388,7 +405,7 @@ namespace Project_Data.Scripts
             else if (farmManager2 == null && factoryCount > 1 && !GameManager.Instance.factoryList[1].isOnWork())
             {
                 farmerTapObj.SetActive(false);
-                truckTapObj.SetActive(false);
+                //truckTapObj.SetActive(false);
                // horseTapObj.SetActive(false);
                 //farmer2TapObj.SetActive(true);
 
@@ -400,7 +417,7 @@ namespace Project_Data.Scripts
             else
             {
                 farmerTapObj.SetActive(false);
-                truckTapObj.SetActive(false);
+                //truckTapObj.SetActive(false);
                 //horseTapObj.SetActive(false);
                 farmer2TapObj.SetActive(false);
 
@@ -413,7 +430,7 @@ namespace Project_Data.Scripts
 
         public void showOneTimeSpeechBubble(string message)
         {
-            Debug.Log("ShowMessageWithIcon  showOneTimeSpeechBubble");
+         //   Debug.Log("ShowMessageWithIcon  showOneTimeSpeechBubble");
             Speech.Instance.ShowMessageWithIcon(message, true);
         }
 

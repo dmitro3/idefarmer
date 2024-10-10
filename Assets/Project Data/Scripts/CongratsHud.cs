@@ -60,7 +60,7 @@ namespace Project_Data.Scripts
             GameManager.Instance.addCash(rewardAmount);
             SoundManager.Instance.PlayGetCoinsSound();
             GameObject particle = Instantiate(coinEffect, transform.position, Quaternion.identity);
-            particle.GetComponent<CoinsEffect>().PlayEffect(GameManager.Instance.cashText.transform);
+            particle.GetComponent<CoinsEffect>().PlayEffect(GameManager.Instance.balanceTonText.transform);
             closeBtn();
         }
 

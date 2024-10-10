@@ -355,13 +355,15 @@ namespace Project_Data.Scripts
             }
 
             double managerCost = 100 * Math.Pow(2, managerCount);
-            if (GameManager.Instance.getCash() < managerCost)
-            {
-                GameManager.Instance.ShowToast("Not Enough Coins");
-                return;
-            }
 
-            GameManager.Instance.PlayExplosionEffect(hireButton.transform);
+            //if (GameManager.Instance.getCash() < managerCost)
+            //{
+            //    GameManager.Instance.ShowToast("Not Enough Coins");
+            //    return;
+            //}
+
+            //GameManager.Instance.PlayExplosionEffect(hireButton.transform);
+
             GameManager.Instance.addCash(-managerCost);
 
             ManagerInfo manager = createManager();

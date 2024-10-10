@@ -88,7 +88,7 @@ namespace Project_Data.Scripts
             SoundManager.Instance.PlayCloseHudSound();
             gameObject.SetActive(false);
             Debug.Log("ManageHub  tutorialManager");
-            GameManager.Instance.tutorialManager.updateStep(TutorialStep.OpenLevelUpPopup);
+            Debug.Log("TutorialManager bat dau");
         }
 
         public void bootManagerBtnPressed()

@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using DG.Tweening;
+using Org.BouncyCastle.Math.EC.Multiplier;
+using TonSdk.Core.Boc;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
 
 namespace Project_Data.Scripts
 {
@@ -33,9 +39,9 @@ namespace Project_Data.Scripts
 
         public Text profitsText; //Hiện profit khi cừu cho lông
 
-        public Button bootPowerUpBtn;
-        public Button miningPowerUpBtn;
-        public Text   powerUpTimerText;
+        //public Button bootPowerUpBtn;
+        //public Button miningPowerUpBtn;
+        //public Text   powerUpTimerText;
         public ParticleSystem particleSystem; //Hiệu ứng farm
 
         public Button levelUpBtn; //Nút lên cấp farm
@@ -83,6 +89,7 @@ namespace Project_Data.Scripts
         [Header("hình anh cừu đang ăn")]
         public Image sheepCurrent;
         public Sprite[] sheepAnimSprites;
+        public Text framBalanceText;
         float walkAnimationSpeed = 0.1f;
         float workAnimationSpeed = 0.1f;
         float loadAnimationSpeed = 0.1f;
@@ -113,12 +120,22 @@ namespace Project_Data.Scripts
 
         bool startDone;
         Vector2 size = Vector2.zero;
+        public ObjectPooler objectPooler;
+
+        public bool Shepherd;
+        public double UpgradePrice;
+        private double baseHashrate = 0.2142857143;
+        private double basePrice = 1.20;
+        private double currentBalance = 0.0;
+        private List<GameObject> instances = new List<GameObject>(); // Danh sách lưu trữ các đối tượng đã được tạo
 
         void Start ()
         {
-
+            baseHashrate = 0.2142857143;
+            basePrice = 1.20;
+            workersList = new List<WorkerData>();
             int worldIndex = GameManager.Instance.worldIndex; //Lấy bản đồ hiện tại
-            Debug.Log("Map hien tai " + worldIndex);
+            //Debug.Log("Map hien tai " + worldIndex);
 
             //Set hình ảnh  giao diện
             GetComponent<Image>().sprite = plotBg[worldIndex];
@@ -138,11 +155,11 @@ namespace Project_Data.Scripts
 
             workerParent = gameObject;
             //Lấy dữ liệu từ data
-            GameManager.Data data = GameManager.Instance.dataList[index - 1];
-            baseCost = data.cost;
-            baseEarning = data.earning * earningExp;
-            exp2 = exp2 - (0.002 * (index - 1));
-            exp3 = exp3 - (0.002 * (index - 1));
+            //GameManager.Data data = GameManager.Instance.dataList[index - 1];
+            //baseCost = data.cost;
+            //baseEarning = data.earning * earningExp;
+            //exp2 = exp2 - (0.002 * (index - 1));
+            //exp3 = exp3 - (0.002 * (index - 1));
 
 
 
@@ -150,7 +167,7 @@ namespace Project_Data.Scripts
 
             calculateNewCostAndEarning();
 
-            levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level + "");
+            levelText.text = "Level\n" + (level);
             profitsText.text = "" + GameUtils.currencyToString(profits);
 
             //Khởi tạo người làm việc
@@ -183,29 +200,7 @@ namespace Project_Data.Scripts
                 StartCoroutine(PlayAnim(workerData));
             }
           
-            //Thêm con cưu
-            if (level >= 25)
-            {
-                GameObject worker1 = Instantiate(workerObject, workerParent.transform);
-                worker1.SetActive(true);
-
-                WorkerData workerData1 = new WorkerData();
-                workerData1.worker = worker1;
-                workerData1.isIdleAnim = true;
-                workersList.Add(workerData1);
-                StartCoroutine(PlayAnim(workerData1));
-            }
-            if (level >= 50)
-            {
-                GameObject worker1 = Instantiate(workerObject, workerParent.transform);
-                worker1.SetActive(true);
-
-                WorkerData workerData1 = new WorkerData();
-                workerData1.worker = worker1;
-                workerData1.isIdleAnim = true;
-                workersList.Add(workerData1);
-                StartCoroutine(PlayAnim(workerData1));
-            }
+            
 
             for (int i = 0; i < workersList.Count; i++)
             {
@@ -217,7 +212,7 @@ namespace Project_Data.Scripts
 
             if (managerInfo == null)
             {
-                Debug.Log("managerInfo is null");
+                //Debug.Log("managerInfo is null");
                 //Set hình ảnh manager khi mua
                 managerObject.GetComponent<Image>().overrideSprite = managerSprites[(index % 4) * 8];
                 //Set bóng của manager lúc chưa mua
@@ -237,34 +232,93 @@ namespace Project_Data.Scripts
 
             startDone = true;
             //Nếu chưa haon2 thanh hướng dẫn thì ẩn đi nút thêm manager và lên cấp
-            if (!GameManager.Instance.tutorialManager.isTutorialCompleted())
-            {
-                levelUpBtn.gameObject.SetActive(false);
-                addManagerBtn.gameObject.SetActive(false);
-            }
+            //if (!GameManager.Instance.tutorialManager.isTutorialCompleted())
+            //{
+            //    levelUpBtn.gameObject.SetActive(false);
+            //    addManagerBtn.gameObject.SetActive(false);
+            //}
             //ẩn nút thêm mananger
-            addManagerBtn.gameObject.SetActive(false);
+            //addManagerBtn.gameObject.SetActive(false);
 
             //Nếu hoàn tất và có tiền thì nâng cấp
-            if (GameManager.Instance.tutorialManager.isTutorialCompleted() &&
-                GameManager.Instance.getCash() >= GameManager.Instance.managerSelection.getManagerCost(BuldingType.Mine))
-            {
-                addManagerBtn.gameObject.SetActive(true);
-            }
-            //Bật nút tăng cấp farm
-            if (GameManager.Instance.tutorialManager.checkCurrentStepDone(TutorialStep.OpenLevelUpPopup))
-            {
-                levelUpBtn.gameObject.SetActive(true);
-            }
+            //if (GameManager.Instance.tutorialManager.isTutorialCompleted() &&
+            //    GameManager.Instance.getCash() >= GameManager.Instance.managerSelection.getManagerCost(BuldingType.Mine))
+            //{
+            //    addManagerBtn.gameObject.SetActive(true);
+            //}
+            ////Bật nút tăng cấp farm
+            //if (GameManager.Instance.tutorialManager.checkCurrentStepDone(TutorialStep.OpenLevelUpPopup))
+            //{
+            //    levelUpBtn.gameObject.SetActive(true);
+            //}
+            //Debug.Log("level level " + level);
+            //if(level >= GameManager.MAX_LEVEL)
+            //{
+                
+            //    upgradeArrow.gameObject.SetActive(false);
+            //}
 
             //Chỉ số từng farm để đánh dấu thứ tự
             plotIndexTxt.text = index + "";
+            //Load so du balcae
+            LoadBanlanceOneFarm();
 
             //Nút mũi tên lên cấp 
             Sequence seq = DOTween.Sequence();
             seq.Append(upgradeArrow.transform.DOScale(0.8f, 0.75f)).SetEase(Ease.Linear);
             seq.Append(upgradeArrow.transform.DOScale(1.1f, 0.75f)).SetEase(Ease.Linear);
             seq.SetLoops(-1);
+        }
+
+        void LoadBanlanceOneFarm()
+        {
+            currentBalance = 0.0;
+            double hashRateFarm = 0.0, hashRateConveyor = 0.0;
+            UserSheepFarm userSheepFarm= UserDataManager.Instance.GetOneSheepFarm(index);
+            UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
+            if (userSheepFarm != null){
+
+                hashRateFarm = userSheepFarm.HashRate;
+            }
+            if (userConveyor != null)
+            {
+                hashRateConveyor = userConveyor.HashRate;
+            }
+
+            //hashrate trại cừu - hashrate băng chuyền<0 băng chuyền đang tải > trại cừu, tồn kho = 0
+            //hashrate trại cừu - hashrate băng chuyền > 0 băng chuyền đang tải<trại cừu, tồn kho = hashRate chênh lệch *thời gian(note lại)
+            if (hashRateFarm - hashRateConveyor> 0){
+
+                UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
+                long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                currentBalance = (hashRateFarm - hashRateConveyor) * ((currentTime - userBalance.lastUpdate) / 1000 / 86400);
+            }
+            framBalanceText.text=currentBalance.ToString("F8");
+        }
+        void IncreaBalance()
+        {
+          //  Debug.Log("coib Tang ba");
+            UserSheepFarm userSheepFarm = UserDataManager.Instance.GetOneSheepFarm(index);
+            UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
+            long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            double addBalance = userSheepFarm.HashRate / 86400 * 2;
+            currentBalance += addBalance;
+            framBalanceText.text = currentBalance.ToString("F8");
+        }
+
+        void DeIncreaBalance()
+        {
+
+            UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
+            UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
+            long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            double addBalance = userConveyor.HashRate  / 86400 * 2;
+
+            currentBalance -= addBalance;
+            if (currentBalance < 0)
+                currentBalance = 0;
+
+            framBalanceText.text = currentBalance.ToString("F8");
         }
 
         public void setWorkerWorkSpeed(float speed)
@@ -286,7 +340,7 @@ namespace Project_Data.Scripts
                 }
 
                 TimeSpan ts = TimeSpan.FromSeconds(managerInfo.timerCountdown);
-                powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
+                //powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
             }
             if (managerInfo != null &&  managerInfo.isPowerUpCooldown)
             {
@@ -298,11 +352,11 @@ namespace Project_Data.Scripts
                     workAnimationSpeed  = 0.1f;
 
                     setManagerType();
-                    powerUpTimerText.gameObject.SetActive(false);
+                    //powerUpTimerText.gameObject.SetActive(false);
                 }
 
                 TimeSpan ts = TimeSpan.FromSeconds(managerInfo.timerCooldown);
-                powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
+                //powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
             
                 managerObject.GetComponent<Image>().color = new Color(0.39f, 0.39f, 0.39f, 0.82f);
             }
@@ -320,30 +374,31 @@ namespace Project_Data.Scripts
                 }
             }
 
-            if (GameManager.Instance.getCash() >= cost && level < GameManager.MAX_LEVEL)
-            {
-                upgradeArrow.gameObject.SetActive(true);
-            }
-            else
-            {
-                upgradeArrow.gameObject.SetActive(false);
-            }
+            //if (GameManager.Instance.getCash() >= cost && level < GameManager.MAX_LEVEL)
+            //{
+            //    upgradeArrow.gameObject.SetActive(true);
 
-            if (!hasManager && ((GameManager.Instance.tutorialManager.isTutorialCompleted() &&
-                                 GameManager.Instance.getCash() >= GameManager.Instance.managerSelection.getManagerCost(BuldingType.Mine)) ||
-                                GameManager.Instance.managerSelection.getManagersCount(BuldingType.Mine) > 0))
-            {
-                addManagerBtn.gameObject.SetActive(true);
-            }
-            else
-            {
-                addManagerBtn.gameObject.SetActive(false);
-            }
+            //}
+            //else
+            //{
+            //    upgradeArrow.gameObject.SetActive(false);
+            //}
+
+            //if (!hasManager && ((GameManager.Instance.tutorialManager.isTutorialCompleted() &&
+            //                     GameManager.Instance.getCash() >= GameManager.Instance.managerSelection.getManagerCost(BuldingType.Mine)) ||
+            //                    GameManager.Instance.managerSelection.getManagersCount(BuldingType.Mine) > 0))
+            //{
+            //    addManagerBtn.gameObject.SetActive(true);
+            //}
+            //else
+            //{
+            //    addManagerBtn.gameObject.SetActive(false);
+            //}
         }
 
         public void moveWorkerToWorkUnit()
         {
-            Debug.Log("Con cừu di chuyển");
+            //Debug.Log("Con cừu di chuyển");
             
             if (!hasManager)
             {
@@ -355,7 +410,7 @@ namespace Project_Data.Scripts
             {
                 WorkerData workerData = workersList[j];
                 //Hàm di chuyển
-                StartCoroutine(moveWorkerToWorkUnit1(workerData, j * 3.5f));
+                StartCoroutine(moveWorkerToWorkUnit1(workerData, j * 1.5f));
             }
         }
         //Hàm di chuyển con cừu
@@ -406,7 +461,7 @@ namespace Project_Data.Scripts
                 particleSystem.Play();
                 yield return new WaitForSeconds(workerWorkTime);
 
-                Debug.Log("Quay lai den noi nguoi quan lý");
+                //Debug.Log("Quay lai den noi nguoi quan lý");
 
                 workerData.isIdleAnim = false;
                 workerData.isWalkAnim = false;
@@ -421,7 +476,9 @@ namespace Project_Data.Scripts
                 }
                 yield return startTween.WaitForCompletion();
 
-                Debug.Log("Tăng tiền");
+                //Debug.Log("Tăng tiền");
+
+                IncreaBalance();
 
                 {
                     Slider slider = worker1.transform.Find("Slider").GetComponent<Slider>();
@@ -449,7 +506,7 @@ namespace Project_Data.Scripts
             worker.SetActive(false);
             sheepCurrent.gameObject.SetActive(true);
             StartCoroutine(AnimationSheep());
-            StartCoroutine(GetCoinsAnimation(worker, workerData,index));
+            StartCoroutine(GetCoinsAnimation(worker, workerData, index));
 
         }
 
@@ -470,12 +527,31 @@ namespace Project_Data.Scripts
             yield return new WaitForSeconds(0.5f);
             //Giam tiền bên farm
             subtractProfitsCollected(20);
+            //Giam balances
+            DeIncreaBalance();
             //Tạo lông cừu và di chuyển xuống băng chuyền
-            GameObject pro = Instantiate(prefabProduct, productParents.transform);
+            //GameObject pro = Instantiate(prefabProduct, productParents.transform);
+
+
+            GameObject pro = objectPooler.GetPooledObject();
+            pro.transform.localPosition = Vector3.zero;
+
+            // Thiết lập điều khiển cho quả bóng (chỉ định Object Pool và hướng di chuyển)
+            BallController ballController = pro.GetComponent<BallController>();
+            ballController.Initialize(objectPooler);
+
             Sequence seq = DOTween.Sequence();
-            seq.Append(pro.transform.DOLocalMoveY(-250f, 0.2f));
-            //Xuống băng chuyền rùi di chuyển đến kho
-            GameManager.Instance.liftHandler.collectProduct(pro, index);
+            seq.Append(pro.transform.DOLocalMoveY(-90f, 0.5f)).OnComplete(() => {
+
+                //objectPooler.ReturnObjectToPool(pro);
+                // GameManager.Instance.liftHandler.collectProduct();
+                //Xuống băng chuyền rùi di chuyển đến kho
+                collectProduct(pro, index);
+            }); ;
+
+
+          
+           // GameManager.Instance.liftHandler.collectProduct(pro, index);
             //Debug.Log("LiftHandler hiện cuộn len");
             sheepCurrent.gameObject.SetActive(false);
             worker.SetActive(true);
@@ -488,10 +564,101 @@ namespace Project_Data.Scripts
             }
 
             profitsText.text = "" + GameUtils.currencyToString(profits);
-            //Debug.Log("Factory  tutorialManager");
-            //Hàm cap nhat cac buoc
-            Debug.Log("Tutorail 2. Đã mở khoá farm");
+            //Debug.Log("TutorialManager cap nhat");
+            //Khi con cu7u di chuyen xong thi mo khoa nha cuu
             GameManager.Instance.tutorialManager.updateStep(TutorialStep.UnlockFarmHouse);
+        }
+
+        //Hàm các quả tơ về kho
+        void collectProduct(GameObject pro, int index)
+        {
+
+            //int positionDestination = 200 * index;
+            //float time = 5 * index;
+            //if (index == 1)
+            //{
+            //    positionDestination = 200 * index;
+            //    time = 5;
+
+            //}
+            //else if (index == 2)
+            //{
+            //    //positionDestination = 700;
+            //    //time = 4 * index;
+            //    positionDestination = 700;
+            //    time = 17.5f;
+            //}
+            //else if(index == 3)
+            //{
+            //    //positionDestination = 700;
+            //    //time = 4 * index;
+            //    positionDestination = 1200;
+            //    time = 30;
+            //}
+            //else if(index == 4)
+            //{
+            //    //positionDestination = 700;
+            //    //time = 4 * index;
+            //    positionDestination =1700;
+            //    time = 42.5f;
+            //}
+            //else  if (index == 5)
+            //{
+            //    //positionDestination = 700;
+            //    //time = 4 * index;
+            //    positionDestination = 2200;
+            //    time = 55.0f;
+            //}
+           
+
+            //else
+            //{
+            //    positionDestination = 700 + 500 * (index-2);
+            //}
+
+
+            Sequence seq = DOTween.Sequence();
+            seq.Append(pro.transform.DOLocalMoveX(-90, 0.5f)).OnComplete(() => {
+
+                pro.gameObject.transform.SetParent(GameManager.Instance.parrfentLift.transform);
+                float distance = Vector3.Distance(GameManager.Instance.destination.transform.localPosition, pro.transform.localPosition);
+
+
+                float moveDuration = distance /50f;
+
+                pro.GetComponent<BallController>().isActive = true;
+                //Debug.Log("distance " + distance);
+                 gotoTarget(pro, GameManager.Instance.destination.transform.localPosition.y, moveDuration);
+            });
+
+         
+
+
+        }
+        void gotoTarget(GameObject pro, float positionDestination, float time)
+        {
+            // Tính toán hướng di chuyển từ vị trí hiện tại đến điểm đích
+            Vector2 direction = Vector2.up;
+
+            pro.GetComponent<Rigidbody2D>().velocity = direction * 0.5f;
+            // Áp dụng vận tốc theo hướng đã tính toán
+          
+
+            //float delay = index* 0.5f;
+            //Sequence seq = DOTween.Sequence();
+            //seq.Append(pro.transform.DOLocalMoveY(positionDestination, time))
+            //      .SetEase(Ease.Linear)   
+
+            //      // Tốc độ đều đặn (không thay đổi gia tốc)
+            //    // Áp dụng độ trễ để tạo hiệu ứng "đồng bộ hóa"
+            //.SetLoops(-1, LoopType.Restart) // Lặp lại mãi mãi (restart từ đầu)
+            //    .OnComplete(() =>
+            //{
+
+              //  objectPooler.ReturnObjectToPool(pro);
+
+            //    GameManager.Instance.liftHandler.collectProduct();
+            //});
         }
         public double getProfitsAndClear()
         {
@@ -515,123 +682,230 @@ namespace Project_Data.Scripts
                 profitsText.text = "" + GameUtils.currencyToString(profits);
             }
         }
-
+        //Mua
         public void addManager()
         {
             SoundManager.Instance.PlayClickSound();
-            GameManager.Instance.managerSelection.openPopup(index, BuldingType.Mine);
-            AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ManagerHiredInPlot, index);
+            GameManager.Instance.hireManager .openPopup(index, BuldingType.Mine);
+
+           
         }
+        public void BuyManager()
+        {
+
+            GameManager.Instance.tonConnectWallet.DepositHiredSheep(index);
+            GameManager.Instance.tutorialManager.updateStep(TutorialStep.OpenLevelUpPopup);
+            //GameManager.Instance.buyManager.BuyManagerSheep(index, () =>
+            //{
+            //    GameManager.Instance.hireManager.ClosePopup();
+            //    hasManager = true;
+            //    addManagerBtn.gameObject.SetActive(false);
+            //    managerObject.SetActive(true);
+            //});
+        }
+
 
         public void levelUpBtnPressed()
         {
-            double cc = 0;
-            int ll = level;
+
+
+            //if (level >= GameManager.MAX_LEVEL)
+            //{
+            //    GameManager.Instance.ShowToast("You have reached max level");
+            //}
+
+
+            //double cc = 0;
+
+
+            //double newEarning = 0;
+            //double newHarvestSpeed = 0;
+            //int newWorkerCount = 0;
+            //double harvestSpeed = earning / workerWorkTime;
+
+            //double bonusMul = Math.Pow(baseBonusMultiplier, GameUtils.getUpgradeCount(level) + 1);
+
+            //Tinh theo cong thuc o day
+            // double hashCurrentRate = 0, hashNextRate = 0;
+
+            //double currenthashRate = 0, newthashRate = 0, priceTon = 0;
+            //Debug.Log("index hien tai " + index);
+            //Debug.Log("level hien tai " + level);
+            //double basePricetmp = basePrice;
+            //double baseHashratetmp = baseHashrate;
+            //if (index > 1)
+            //{
+            //    basePricetmp = basePricetmp * Math.Pow(1.25, index - 1);
+            //    baseHashratetmp = baseHashrate * Math.Pow(1.25, index - 1);
+            //}
+
+            //if (level == 0)
+            //{
+            //    currenthashRate = 0.018;
+            //    priceTon = basePricetmp;
+            //    newthashRate = baseHashratetmp;
+            //}
+            //else if (level == 1)
+            //{
+            //    currenthashRate = baseHashratetmp;
+            //    newthashRate = baseHashratetmp * Math.Pow(1.5, ((level + 1) - 1));
+            //    priceTon = basePricetmp * Math.Pow(1.5, ((level + 1) - 1));
+            //}
+            //else
+            //{
+            //    currenthashRate = baseHashratetmp * Math.Pow(1.5, (level - 1)); ;
+            //    newthashRate = baseHashratetmp * Math.Pow(1.5, ((level + 1) - 1));
+            //    priceTon = basePricetmp * Math.Pow(1.5, ((level + 1) - 1));
+            //}
             int multiplier = getMaxMultiplier();
-            for (int i = 0; i < multiplier; i++)
+            //Debug.Log("index farm " + index);
+            //Debug.Log("index farm getMaxMultiplier " + multiplier); 
+            double roiBase = 142.8, rateRoi = 2.5;
+            double currenthashRate = 0, newthashRate = 0, upgradePrice = 0, roi = 0.0, newroi = 0.0, currenthashRateSheep = 0.0, newhashRateSheep = 0.0;
+            if (UserDataManager.Instance.UserData.userSheepFarms != null)
             {
-                double cp = 0;
-                if (ll > 99)
+                if (UserDataManager.Instance.UserData.userSheepFarms.Count > 0)
                 {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+                    UserSheepFarm userConveyor = UserDataManager.Instance.GetOneSheepFarm(index);
+                    if (index == 1)
+                    {
+                        roi = roiBase + level * rateRoi;
+                        if (multiplier == 1)
+                        {
+                            newroi = roiBase + (level+1) * rateRoi;
+
+                        }
+                        else if (multiplier == 3)
+                        {
+                            newroi = roiBase + (level + 3) * rateRoi;
+
+                        }
+                        else if (multiplier == 5)
+                        {
+                            newroi = roiBase + (level + 5) * rateRoi;
+                        }
+
+                    }
+                    else
+                    {
+                        roi = roiBase + (level-1) * rateRoi;
+                        if (multiplier == 1)
+                        {
+                            newroi = roiBase + (level + 1-1) * rateRoi;
+
+                        }
+                        else if (multiplier == 3)
+                        {
+                            newroi = roiBase + (level + 3-1) * rateRoi;
+
+                        }
+                        else if (multiplier == 5)
+                        {
+                            newroi = roiBase + (level + 5-1) * rateRoi;
+                        }
+
+                    }
+
+                    if (multiplier == 1)
+                    {
+
+                       
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.UpgradePrice;
+                        newthashRate = userConveyor.HashRate1Lv;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate1Lv;
+                    }
+                    else if (multiplier == 3)
+                    {
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.Upgrade3LvPrice;
+                        newthashRate = userConveyor.HashRate3Lv;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate3Lv;
+
+                    }
+                    else if (multiplier == 5)
+                    {
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.Upgrade5LvPrice;
+                        newthashRate = userConveyor.HashRate5Lv;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate5Lv;
+                    }
+
                 }
-                else if (ll > 19)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
-                }
-                else
-                {
-                    cp = baseCost * Math.Pow(exp1, ll);
-                }
-                ll++;
-                cc += cp;
             }
-
-            double newEarning = getIncrementedEarningPerSec() - getEarningPerSec();
-            double newHarvestSpeed = getIncrementedEarning() / workerWorkTime;
-            int newWorkerCount = level < 25 && ll >= 25 ? 1 : 0;
+            double bonusMul = 0;
+            double newEarning = 0;
+            double newHarvestSpeed = 0;
+            int newWorkerCount = 0;
             double harvestSpeed = earning / workerWorkTime;
-        
-            double bonusMul = Math.Pow(baseBonusMultiplier, GameUtils.getUpgradeCount(level) + 1);
 
-            GameManager.Instance.factoryLevelPopup.showMinePopup(index, cc, 
+            GameManager.Instance.factoryLevelPopup.showMinePopup(index, upgradePrice, currenthashRate, newthashRate,
                 getEarningPerSec(), workersList.Count, workerMoveSpeed, harvestSpeed, earning,
                 newEarning, newWorkerCount, 0, newHarvestSpeed - harvestSpeed, getIncrementedEarning() - earning,
-                0, level, multiplier, bonusMul, "Mine");
-            Debug.Log("FactoryHanler  tutorialManager");
+                0, level, multiplier, bonusMul, "Mine", roi, newroi, currenthashRateSheep, newhashRateSheep);
+
             GameManager.Instance.tutorialManager.updateStep(TutorialStep.BuyUpgrade);
         }
+        public IEnumerator UpgrapeFarm(int index, Action onComplete = null)
+        {
+            // Thực hiện công việc nâng cấp và chờ trong một khoảng thời gian giả định (thay thế bằng quá trình thực tế)
+            yield return new WaitForSeconds(2.0f); // Ví dụ thời gian nâng cấp
 
+            // Khi hoàn thành, gọi callback
+            onComplete?.Invoke();
+        }
         public void levelUp(double cc)
         {
-            if (GameManager.Instance.getCash() < cc)
-            {
-                GameManager.Instance.ShowToast("Not Enough Coins");
-                return;
-            }
 
             SoundManager.Instance.PlayLevelUpSound();
-            int multiplier = getMaxMultiplier();
-            for (int i = 0; i < multiplier; i++)
-            {
-                int nextUpgradeLevel = GameUtils.getNextUpgradeLevel(level);
+            GameManager.Instance.tonConnectWallet.UpgradeFarm(index, cc);
 
-                if (level + 1 == nextUpgradeLevel)
-                {
-                    SoundManager.Instance.PlayUpgradeSound();
-                    GameManager.Instance.addBags(10);
-                }
-                level++;
-            
-                AnalyticsManager.Instance.SendPlotUpgradedEvent(index, level);
-            }
+            levelText.text = "Level\n" + (level);
 
-            GameManager.Instance.addCash(-cc);
-            calculateNewCostAndEarning();
-            levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level+"");
+            //if (level >= 25 && workersList.Count < 2)
+            //{
+            //    GameObject worker1 = GameObject.Instantiate(workerObject, workerParent.transform);
+            //    worker1.SetActive(true);
 
-            if (level >= 25 && workersList.Count < 2)
-            {
-                GameObject worker1 = GameObject.Instantiate(workerObject, workerParent.transform);
-                worker1.SetActive(true);
+            //    WorkerData workerData1 = new WorkerData();
+            //    workerData1.worker = worker1;
+            //    workerData1.isIdleAnim = true;
+            //    workersList.Add(workerData1);
 
-                WorkerData workerData1 = new WorkerData();
-                workerData1.worker = worker1;
-                workerData1.isIdleAnim = true;
-                workersList.Add(workerData1);
+            //    worker1.GetComponent<Image>().sprite = index % 2 == 1 ? walkSprites[0] : walkSprites[0];
+            //    worker1.GetComponent<Image>().SetNativeSize();
+            //    StartCoroutine(PlayAnim(workerData1));
+            //    if (hasManager)
+            //    {
+            //        //Hàm di chuyển
+            //        StartCoroutine(moveWorkerToWorkUnit1(workerData1, 1f));
+            //    }
+            //}
+            //if (level >= 50 && workersList.Count < 3)
+            //{
+            //    GameObject worker1 = GameObject.Instantiate(workerObject, workerParent.transform);
+            //    worker1.SetActive(true);
 
-                worker1.GetComponent<Image>().sprite = index % 2 == 1 ? walkSprites[0] : walkSprites[0];
-                worker1.GetComponent<Image>().SetNativeSize();
-                StartCoroutine(PlayAnim(workerData1));
-                if (hasManager)
-                {
-                    //Hàm di chuyển
-                    StartCoroutine(moveWorkerToWorkUnit1(workerData1, 1f));
-                }
-            }
-            if (level >= 50 && workersList.Count < 3)
-            {
-                GameObject worker1 = GameObject.Instantiate(workerObject, workerParent.transform);
-                worker1.SetActive(true);
+            //    WorkerData workerData1 = new WorkerData();
+            //    workerData1.worker = worker1;
+            //    workerData1.isIdleAnim = true;
+            //    workersList.Add(workerData1);
 
-                WorkerData workerData1 = new WorkerData();
-                workerData1.worker = worker1;
-                workerData1.isIdleAnim = true;
-                workersList.Add(workerData1);
+            //    worker1.GetComponent<Image>().sprite = walkSprites[0];
+            //    worker1.GetComponent<Image>().SetNativeSize();
+            //    StartCoroutine(PlayAnim(workerData1));
+            //    if (hasManager)
+            //    {
+            //        //Hàm di chuyển
+            //        StartCoroutine(moveWorkerToWorkUnit1(workerData1, 1.5f));
+            //    }
+            //}
 
-                worker1.GetComponent<Image>().sprite = walkSprites[0];
-                worker1.GetComponent<Image>().SetNativeSize();
-                StartCoroutine(PlayAnim(workerData1));
-                if (hasManager)
-                {
-                    //Hàm di chuyển
-                    StartCoroutine(moveWorkerToWorkUnit1(workerData1, 1.5f));
-                }
-            }
-
-            levelUpBtnPressed();
-            Debug.Log("Factory Handler  tutorialManager");
-            GameManager.Instance.tutorialManager.updateStep(TutorialStep.CloseUpgrade);
+            //levelUpBtnPressed();
+            GameManager.Instance.tutorialManager.tutorialCompleted();
         }
 
         public void calculateNewCostAndEarning()
@@ -703,10 +977,57 @@ namespace Project_Data.Scripts
 
             profits = double.Parse(profitStr);
             level = int.Parse(levelStr);
-            if (level > GameManager.MAX_LEVEL)
+            //if (level > GameManager.MAX_LEVEL)
+            //{
+            //    level = GameManager.MAX_LEVEL;
+            //}
+        }
+
+        public void getDataFarmTonData(int sheepFarmId)
+        {
+
+            this.index = sheepFarmId;
+
+            UserSheepFarm userSheepFarm = UserDataManager.Instance.UserData.userSheepFarms.Where(n => n.SheepFarmId == sheepFarmId).FirstOrDefault();
+
+            if (userSheepFarm != null)
             {
-                level = GameManager.MAX_LEVEL;
+                level = userSheepFarm.Level;
             }
+
+            // string profitStr = PlayerPrefs.GetString("Factory" + index + "profits" + postFix, "0");
+            //string levelStr = PlayerPrefs.GetString("Factory" + index + "level" + postFix, "1");
+
+            profits = 0;
+            ////level = int.Parse(levelStr);
+            //if (level > GameManager.MAX_LEVEL)
+            //{
+            //    level = GameManager.MAX_LEVEL;
+            //}
+        }
+        public void getDataFarmTonServer(int sheepFarmId)
+        {
+
+            this.index = sheepFarmId;
+
+            UserSheepFarm userSheepFarm = UserDataManager.Instance.UserData.userSheepFarms.Where(n => n.SheepFarmId == sheepFarmId).FirstOrDefault();
+
+            if (userSheepFarm != null)
+            {
+                level = userSheepFarm.Level;
+                Shepherd = userSheepFarm.Shepherd;
+                UpgradePrice = userSheepFarm.UpgradePrice;
+            }
+
+
+            // string profitStr = PlayerPrefs.GetString("Factory" + index + "profits" + postFix, "0");
+            //string levelStr = PlayerPrefs.GetString("Factory" + index + "level" + postFix, "1");
+
+            profits = 0;
+            //if (level > GameManager.MAX_LEVEL)
+            //{
+            //    level = GameManager.MAX_LEVEL;
+            //}
         }
 
         public IEnumerator managerAnimation()
@@ -859,26 +1180,26 @@ namespace Project_Data.Scripts
                 workAnimationSpeed = workAnimationSpeed / managerInfo.speed;
             }
 
-            bootPowerUpBtn.gameObject.SetActive(false);
-            miningPowerUpBtn.gameObject.SetActive(false);
-            powerUpTimerText.gameObject.SetActive(true);
+            //bootPowerUpBtn.gameObject.SetActive(false);
+            //miningPowerUpBtn.gameObject.SetActive(false);
+            //powerUpTimerText.gameObject.SetActive(true);
             TimeSpan ts = TimeSpan.FromSeconds(managerInfo.timerCountdown);
-            powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
+            //powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
         }
 
         public void managerPopupCloseCB()
         {
             managerInfo = GameManager.Instance.managerSelection.getManagerInfo(index, BuldingType.Mine);
 
-            if (managerInfo != null)
+            if ( Shepherd || managerInfo != null)
             {
                 hasManager = true;
                 addManagerBtn.gameObject.SetActive(false);
                 managerObject.SetActive(true);
                 moveWorkerToWorkUnit();
                 setManagerType();
-                managerObject.GetComponent<Image>().overrideSprite = managerSprites[managerInfo.iconIndex * 8];
-                addManagerBtn.transform.Find("Image").GetComponent<Image>().overrideSprite = addManagerSprites[managerInfo.iconIndex];
+                managerObject.GetComponent<Image>().overrideSprite = managerSprites[0];
+                addManagerBtn.transform.Find("Image").GetComponent<Image>().overrideSprite = addManagerSprites[0];
             }
             else
             {
@@ -916,26 +1237,26 @@ namespace Project_Data.Scripts
 
             if (managerInfo.isPowerUp || managerInfo.isPowerUpCooldown)
             {
-                bootPowerUpBtn.gameObject.SetActive(false);
-                miningPowerUpBtn.gameObject.SetActive(false);
-                powerUpTimerText.gameObject.SetActive(true);
+                //bootPowerUpBtn.gameObject.SetActive(false);
+                //miningPowerUpBtn.gameObject.SetActive(false);
+                //powerUpTimerText.gameObject.SetActive(true);
                 TimeSpan ts = TimeSpan.FromSeconds(managerInfo.isPowerUp ? managerInfo.timerCountdown : managerInfo.timerCooldown);
-                powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
+               // powerUpTimerText.text = GameUtils.TimeSpanToReadableString1(ts);
                 return;
             }
 
-            if (managerInfo.effectType == EffectType.BootSpeed)
-            {
-                bootPowerUpBtn.gameObject.SetActive(true);
-                miningPowerUpBtn.gameObject.SetActive(false);
-                powerUpTimerText.gameObject.SetActive(false);
-            }
-            else
-            {
-                bootPowerUpBtn.gameObject.SetActive(false);
-                miningPowerUpBtn.gameObject.SetActive(true);
-                powerUpTimerText.gameObject.SetActive(false);
-            }
+            //if (managerInfo.effectType == EffectType.BootSpeed)
+            //{
+            //    bootPowerUpBtn.gameObject.SetActive(true);
+            //    miningPowerUpBtn.gameObject.SetActive(false);
+            //    powerUpTimerText.gameObject.SetActive(false);
+            //}
+            //else
+            //{
+            //    bootPowerUpBtn.gameObject.SetActive(false);
+            //    miningPowerUpBtn.gameObject.SetActive(true);
+            //    powerUpTimerText.gameObject.SetActive(false);
+            //}
         }
 
         public void openChooseManagerPanel()
@@ -963,6 +1284,19 @@ namespace Project_Data.Scripts
                     addManagerBtn.gameObject.SetActive(false);
                 }
             }
+            else if (step == TutorialStep.HireManager)
+            {
+                if (!hasManager)
+                {
+                    addManagerBtn.gameObject.SetActive(true);
+                }
+                else
+                {
+                    addManagerBtn.gameObject.SetActive(false);
+                }
+               
+            }
+            
             else if (step == TutorialStep.OpenLevelUpPopup)
             {
                 levelUpBtn.gameObject.SetActive(true);
@@ -983,17 +1317,17 @@ namespace Project_Data.Scripts
 
         int getMaxMultiplier()
         {
-            if (level >= GameManager.MAX_LEVEL)
-            {
-                return 0;
-            }
+            //if (level >= GameManager.MAX_LEVEL)
+            //{
+            //    return 0;
+            //}
 
             if (GameManager.Instance.multiplier != -1)
             {
-                if (GameManager.Instance.multiplier + level > GameManager.MAX_LEVEL)
-                {
-                    return GameManager.MAX_LEVEL - level;
-                }
+                //if (GameManager.Instance.multiplier + level > GameManager.MAX_LEVEL)
+                //{
+                //    return GameManager.MAX_LEVEL - level;
+                //}
 
                 return GameManager.Instance.multiplier;
             }
@@ -1003,36 +1337,36 @@ namespace Project_Data.Scripts
             int ll = level;
             double cc = 0;
 
-            for (int i = 0; ll <= GameManager.MAX_LEVEL ; i++)
-            {
-                double cp = 0;
-                if (ll > 99)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
-                }
-                else if (ll > 19)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
-                }
-                else
-                {
-                    cp = baseCost * Math.Pow(exp1, ll);
-                }
-                ll++;
-                cc += cp;
-                multiplier = i;
-                if (cc > GameManager.Instance.getCash())
-                {
-                    multiplier = i;
-                    break;
-                } 
+            //for (int i = 0; ll <= GameManager.MAX_LEVEL ; i++)
+            //{
+            //    double cp = 0;
+            //    if (ll > 99)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+            //    }
+            //    else if (ll > 19)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
+            //    }
+            //    else
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, ll);
+            //    }
+            //    ll++;
+            //    cc += cp;
+            //    multiplier = i;
+            //    if (cc > GameManager.Instance.getCash())
+            //    {
+            //        multiplier = i;
+            //        break;
+            //    } 
             
-                if (cc == GameManager.Instance.getCash())
-                {
-                    multiplier = i + 1;
-                    break;
-                }
-            }
+            //    if (cc == GameManager.Instance.getCash())
+            //    {
+            //        multiplier = i + 1;
+            //        break;
+            //    }
+            //}
             multiplier = multiplier == 0 ? 1 : multiplier;
             return multiplier;
         }

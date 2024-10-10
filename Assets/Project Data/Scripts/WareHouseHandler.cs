@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using static Project_Data.Scripts.LiftHandler;
 
 namespace Project_Data.Scripts
 {
@@ -18,6 +19,13 @@ namespace Project_Data.Scripts
 
     public class WareHouseHandler : MonoBehaviour
     {
+        [System.Serializable]
+        public class DataWareHouse
+        {
+            public int level;
+            public double priceTon;
+        }
+
         public GameObject workerObject;
         public GameObject workersParent;
         public GameObject destination;
@@ -51,7 +59,7 @@ namespace Project_Data.Scripts
         bool shortPipeAnim;
         float animationTime;
 
-
+        public List<DataWareHouse> dataWareHouses = new List<DataWareHouse>();
         List<WareHouseWorkerData> workersList = new List<WareHouseWorkerData>();
 
         double totalLoadCanBear = Double.MaxValue;
@@ -60,7 +68,7 @@ namespace Project_Data.Scripts
 
         bool hasManager = true;
 
-        int level = 1;
+        int level1 = 0;
         double baseCost = 480;
         double baseLoad = 606;
 
@@ -73,10 +81,18 @@ namespace Project_Data.Scripts
         float animationSpeed = 0.1f;
         bool isBoostEnable;
         ManagerInfo managerInfo;
-
+        public int levelShop;
+        private double baseHashrate = 0.1428571429;
+        private double basePrice = 0.80;
         void Start ()
         {
-            
+            levelShop = 0;
+            UserTruck userTruck = UserDataManager.Instance.GetOneUserTruck();
+            if (userTruck != null)
+            {
+                levelShop = userTruck.Level;
+            }
+
             int worldIndex = GameManager.Instance.worldIndex;
             calculateNewCostAndLoad();
             if (!hasManager)
@@ -96,15 +112,15 @@ namespace Project_Data.Scripts
 
             if (!GameManager.Instance.tutorialManager.isTutorialCompleted())
             {
-                levelupBtn.gameObject.SetActive(false);
+                levelupBtn.gameObject.SetActive(true);
                 //addManagerBtn.gameObject.SetActive(false);
 
                 for (int i = 0; i < workersList.Count; i++)
                     workersList[i].worker.SetActive(false);
             }
 
-            if (GameManager.Instance.tutorialManager.isTutorialCompleted())
-                unlockWarehouse(false);
+            //if (GameManager.Instance.tutorialManager.isTutorialCompleted())
+            //    unlockWarehouse(false);
 
             Sequence seq = DOTween.Sequence();
             seq.Append(upgradeArrow.transform.DOScale(0.8f, 0.75f)).SetEase(Ease.Linear);
@@ -113,6 +129,15 @@ namespace Project_Data.Scripts
 
             StartCoroutine("managerAnimation");
             StartCoroutine("pipeAnimation");
+        }
+        public void LoadShop()
+        {
+            levelShop = 0;
+            UserTruck userTruck = UserDataManager.Instance.GetOneUserTruck();
+            if (userTruck != null)
+            {
+                levelShop = userTruck.Level;
+            }
         }
 
         public IEnumerator managerAnimation()
@@ -149,7 +174,7 @@ namespace Project_Data.Scripts
 	
         void Update ()
         {
-            levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level+"");
+            levelText.text = "Level\n" + (levelShop + "");
 
             if (managerInfo != null && managerInfo.isPowerUp)
             {
@@ -187,10 +212,10 @@ namespace Project_Data.Scripts
                 //    managerObject.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
             }
 
-            if (GameManager.Instance.getCash() >= cost && level < GameManager.MAX_LEVEL)
-                upgradeArrow.gameObject.SetActive(true);
-            else
-                upgradeArrow.gameObject.SetActive(false);
+            //if (level1 < GameManager.MAX_LEVEL)
+            //    upgradeArrow.gameObject.SetActive(true);
+            //else
+            //    upgradeArrow.gameObject.SetActive(false);
 
             //if (!hasManager && ((GameManager.Instance.tutorialManager.isTutorialCompleted() &&
             //                     GameManager.Instance.getCash() >= GameManager.Instance.managerSelection.getManagerCost(BuldingType.WareHouse) &&
@@ -220,6 +245,7 @@ namespace Project_Data.Scripts
 
         public IEnumerator collectAllProfits(WareHouseWorkerData workerData, float yieldTime)
         {
+           // Debug.Log("xe lay tien ");
             GameObject worker1 = workerData.worker;
 
             if (workerData.isWorking)
@@ -248,6 +274,9 @@ namespace Project_Data.Scripts
 
             float time;
             double profits = GameManager.Instance.liftHandler.getProfits();
+            //Giam khi băng chuyền khi xe 
+            GameManager.Instance.liftHandler.SubBalance();
+
             double remainingAmount = totalLoadCanBear - workerData.loadedAmount;
             double loadingSpeed = loadingSpeedPerSec;
 
@@ -339,13 +368,20 @@ namespace Project_Data.Scripts
             }
             yield return new WaitForSeconds(unloadTime);
 
+
+            //Bat dau
+           // Debug.Log("1.TutorialManager bat dau tu day");
             if (PlayerPrefs.GetInt("IsFirstDelivery", 0) == 0)
             {
                 PlayerPrefs.SetInt("IsFirstDelivery", 1);
                 GameManager.Instance.PlayCoinsEffect(workerObject.transform);
             }
 
-            GameManager.Instance.addCash(isBoostEnable ? workerData.loadedAmount * 2 : workerData.loadedAmount);
+
+            //Cap nhat TON
+            GameManager.Instance.addBallanceTon();
+            GameManager.Instance.addBallanceSheepTon();
+            //GameManager.Instance.addCash(isBoostEnable ? workerData.loadedAmount * 2 : workerData.loadedAmount);
 
             workerData.loadedAmount = 0;
             {
@@ -366,13 +402,17 @@ namespace Project_Data.Scripts
                 StartCoroutine(collectAllProfits(workerData, 0));
             }
 
-            if (GameManager.Instance.getCash() >= 100)
-            {
-                GameManager.Instance.tutorialManager.waitForNextStep(false);
-                GameManager.Instance.tutorialManager.updateStep(TutorialStep.OpenLevelUpPopup);
-            }
-            else
-                GameManager.Instance.tutorialManager.waitForNextStep(true);
+           // GameManager.Instance.tutorialManager.updateStep(TutorialStep.OpenLevelUpPopup);
+
+            ////bo sau
+            //if (GameManager.Instance.getCash() >= 100)
+            //{
+            //    Debug.Log("TutorialManager bat dau");
+            //    GameManager.Instance.tutorialManager.waitForNextStep(false);
+            //    GameManager.Instance.tutorialManager.updateStep(TutorialStep.OpenLevelUpPopup);
+            //}
+            //else
+            //    GameManager.Instance.tutorialManager.waitForNextStep(true);
         }
 
         public void addManager()
@@ -382,88 +422,150 @@ namespace Project_Data.Scripts
 
         public void levelUpBtnPressed()
         {
-            double cc = 0;
-            int ll = level;
+            //double cc = 0;
+            //int ll = level1;
 
             int multiplier = getMaxMultiplier();
-            for (int i = 0; i < multiplier; i++)
+            //for (int i = 0; i < multiplier; i++)
+            //{
+            //    double cp = 0;
+            //    if (ll > 99)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+            //    }
+            //    else if (ll > 19)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
+            //    }
+            //    else
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, ll);
+            //    }
+            //    ll++;
+            //    cc += cp;
+            //}
+            //Cong thuc
+
+            double roiBase = 142.8, rateRoi = 2.5;
+            double currenthashRate = 0, newthashRate = 0, upgradePrice = 0, roi = 0.0, newroi = 0.0, currenthashRateSheep = 0.0, newhashRateSheep = 0.0;
+            if (UserDataManager.Instance.UserData.userTruck != null)
             {
-                double cp = 0;
-                if (ll > 99)
+                if (UserDataManager.Instance.UserData.userTruck.Count > 0)
                 {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+                    UserTruck userConveyor = UserDataManager.Instance.UserData.userTruck[0];
+                    roi = roiBase + levelShop * rateRoi;
+
+                    if (multiplier == 1)
+                    {
+
+                        upgradePrice = userConveyor.UpgradePrice;
+                        currenthashRate = userConveyor.HashRate;
+                        newthashRate = userConveyor.HashRate1Lv;
+                       
+                        newroi  = roiBase + (levelShop+1) * rateRoi;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate1Lv;
+                    }
+                    if (multiplier == 3)
+                    {
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.Upgrade3LvPrice;
+                        newthashRate = userConveyor.HashRate3Lv;
+                        newroi = roiBase + (levelShop + 3) * rateRoi;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate3Lv;
+
+                    }
+                    else if (multiplier == 5)
+                    {
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.Upgrade5LvPrice;
+                        newthashRate = userConveyor.HashRate5Lv;
+                        newroi = roiBase + (levelShop + 5) * rateRoi;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate5Lv;
+                    }
+
                 }
-                else if (ll > 19)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
-                }
-                else
-                {
-                    cp = baseCost * Math.Pow(exp1, ll);
-                }
-                ll++;
-                cc += cp;
             }
 
-            double newEarning = getIncrementedEarningPerSec() - getEarningPerSec();
-            double newHarvestSpeed = getIncrementedEarning() / 3;
 
-            GameManager.Instance.levelPopup.showPopup(1, cc, 
-                getEarningPerSec(), /*workersList.Count*/ 1, workerMoveSpeed, loadingSpeedPerSec, totalLoadCanBear,
-                newEarning, 0, 0, newHarvestSpeed - loadingSpeedPerSec, getIncrementedEarning() - totalLoadCanBear,
-                0, level, multiplier, "WareHouse");
+            GameManager.Instance.levelPopup.showPopup(1, upgradePrice, currenthashRate, newthashRate,
+                getEarningPerSec(), 1, workerMoveSpeed, loadingSpeedPerSec, totalLoadCanBear,
+                0.0, 0, 0.0f, 0.0, getIncrementedEarning() - totalLoadCanBear,
+                0.0f, levelShop, multiplier, "WareHouse", roi, newroi, currenthashRateSheep, newhashRateSheep);
+
+        
+
+            //GameManager.Instance.levelPopup.showPopup(1, priceTon, currenthashRate, newthashRate,
+            //    getEarningPerSec(), /*workersList.Count*/ 1, workerMoveSpeed, loadingSpeedPerSec, totalLoadCanBear,
+            //    newEarning, 0, 0, newHarvestSpeed - loadingSpeedPerSec, getIncrementedEarning() - totalLoadCanBear,
+            //    0, levelShop, multiplier, "WareHouse");
         }
 
         public void levelUp(double cc)
         {
-            if (GameManager.Instance.getCash() < cc)
-            {
-                GameManager.Instance.ShowToast("Not Enough Coins");
-                return;
-            }
+            
+
+            //if (GameManager.Instance.coinsWallet < cc)
+            //{
+            //    GameManager.Instance.ShowToast("Not Enough Coins");
+            //    return;
+            //}
 
             SoundManager.Instance.PlayLevelUpSound();
-            int multiplier = getMaxMultiplier();
-            for (int i = 0; i < multiplier; i++)
-            {
-                int nextUpgradeLevel = GameUtils.getNextUpgradeLevel(level);
+            GameManager.Instance.tonConnectWallet.BuyTruck(cc);
+            //GameManager.Instance.buyManager.UpgrapeTruck(1, () =>
+            //{
+            //    UserTruck userTruck = UserDataManager.Instance.GetOneUserTruck();
+            //    levelShop = userTruck.Level;
 
-                if (level + 1 == nextUpgradeLevel)
-                {
-                    SoundManager.Instance.PlayUpgradeSound();
-                }
-                level++;
-            
-                if(level < 10) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 10);
-                else if(level < 25) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 25);
-                else if(level < 50) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 50);
-                else if(level < 100) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 100);
-                else if(level < 150) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 150);
-                else if(level < 200) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 200);
-            }
+            //});
 
-            GameManager.Instance.addCash(-cc);
-            calculateNewCostAndLoad();
-            levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level+"");
-            levelUpBtnPressed();
+
+            //int multiplier = getMaxMultiplier();
+            //for (int i = 0; i < multiplier; i++)
+            //{
+            //    int nextUpgradeLevel = GameUtils.getNextUpgradeLevel(level);
+
+            //    if (level + 1 == nextUpgradeLevel)
+            //    {
+            //        SoundManager.Instance.PlayUpgradeSound();
+            //    }
+            //    level++;
+
+            //    if(level < 10) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 10);
+            //    else if(level < 25) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 25);
+            //    else if(level < 50) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 50);
+            //    else if(level < 100) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 100);
+            //    else if(level < 150) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 150);
+            //    else if(level < 200) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.WirehouseUpgraded, 200);
+            //}
+
+            //GameManager.Instance.addCash(-cc);
+            //calculateNewCostAndLoad();
+
+
+            levelText.text = "Level\n" + ( levelShop );
+            //levelUpBtnPressed();
         }
 
         public void calculateNewCostAndLoad()
         {
-            if (level > 99)
+            if (level1 > 99)
             {
-                cost = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, level - 99);
+                cost = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, level1 - 99);
             }
-            else if (level > 19)
+            else if (level1 > 19)
             {
-                cost = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, level - 19);
+                cost = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, level1 - 19);
             }
             else
             {
-                cost = baseCost * Math.Pow(exp1, level);
+                cost = baseCost * Math.Pow(exp1, level1);
             }
 
-            totalLoadCanBear = baseLoad * Math.Pow(earningExp, level - 1);
+            totalLoadCanBear = baseLoad * Math.Pow(earningExp, level1 - 1);
             loadingSpeedPerSec = totalLoadCanBear / 3;
         }
 
@@ -471,16 +573,16 @@ namespace Project_Data.Scripts
         {
             string postFix = GameManager.Instance.worldIndex == 0 ? "" : GameManager.Instance.worldIndex + "";
             PlayerPrefs.SetInt("WarehouseHasManager" + postFix, hasManager ? 1 : 0);
-            PlayerPrefs.SetInt("WarehouseLevel" + postFix, level);
+            PlayerPrefs.SetInt("WarehouseLevel" + postFix, level1);
         }
 
         public void getData()
         {
             string postFix = GameManager.Instance.worldIndex == 0 ? "" : GameManager.Instance.worldIndex + "";
-            level = PlayerPrefs.GetInt("WarehouseLevel" + postFix, 1);
+            level1 = PlayerPrefs.GetInt("WarehouseLevel" + postFix, 1);
 
-            if (level > GameManager.MAX_LEVEL)
-                level = GameManager.MAX_LEVEL;
+            //if (level1 > GameManager.MAX_LEVEL)
+            //    level1 = GameManager.MAX_LEVEL;
 
             calculateNewCostAndLoad();
         }
@@ -549,7 +651,7 @@ namespace Project_Data.Scripts
             if (maxMul == 0)
                 return getEarningPerSec();
 
-            double earningNew = baseLoad * Math.Pow(earningExp, level + getMaxMultiplier() - 1);
+            double earningNew = baseLoad * Math.Pow(earningExp, level1 + getMaxMultiplier() - 1);
             double earnPerSec = earningNew / (3 * workerMoveSpeed);
             return earnPerSec;
         }
@@ -560,7 +662,7 @@ namespace Project_Data.Scripts
             if (maxMul == 0)
                 return totalLoadCanBear;
 
-            double earningNew = baseLoad * Math.Pow(earningExp, level + getMaxMultiplier() - 1);
+            double earningNew = baseLoad * Math.Pow(earningExp, level1 + getMaxMultiplier() - 1);
             return earningNew;
         }
 
@@ -636,20 +738,20 @@ namespace Project_Data.Scripts
 
         public void unlockWarehouse(bool isButtonPressed)
         {
-            if (!GameManager.Instance.tutorialManager.checkCurrentStepDone(TutorialStep.UnlockWareHouse))
-            {
-                GameManager.Instance.ShowToast("Unlock farm house first.");
-                return;
-            }
+            //if (!GameManager.Instance.tutorialManager.checkCurrentStepDone(TutorialStep.UnlockWareHouse))
+            //{
+            //    GameManager.Instance.ShowToast("Unlock farm house first.");
+            //    return;
+            //}
 
             if (isButtonPressed)
             {
-                //GameManager.Instance.PlayExplosionEffect(unlockBtn.transform);
+               // GameManager.Instance.PlayExplosionEffect(unlockBtn.transform);
                 //GameManager.Instance.addCash(-100);
                 SoundManager.Instance.PlayGetCoinsSound();
             }
             unlockWareHouseSettings();
-            Debug.Log("Tutorail 10. Sau khi mở khoá shop");
+            //Debug.Log("TutorialManager bat dau");
             GameManager.Instance.tutorialManager.updateStep(TutorialStep.HorseWork);
         }
 
@@ -658,13 +760,15 @@ namespace Project_Data.Scripts
             unlockBtn.gameObject.SetActive(false);
             gameObject.GetComponent<Button>().interactable = true;
             gameObject.GetComponent<Button>().enabled = false;
-            levelupBtn.gameObject.SetActive(false);
+            levelupBtn.gameObject.SetActive(true);
            // addManagerBtn.gameObject.SetActive(false);
             for (int j = 0; j < workersList.Count; j++)
             {
                 GameObject worker1 = workersList[j].worker;
                 worker1.SetActive(true);
             }
+
+           
         }
 
         public void tutorialCallback(TutorialStep step)
@@ -687,8 +791,8 @@ namespace Project_Data.Scripts
             }
             else if (step == TutorialStep.UnlockWareHouse)
             {
-                Debug.Log("Tutorail 9. Hiện nút nhà kho");
-               // unlockBtn.gameObject.SetActive(true);
+               // Debug.Log("Tutorail 9. Hiện nút  nâng nhà kho");
+                levelupBtn.gameObject.SetActive(true);
             }
         }
 
@@ -706,53 +810,50 @@ namespace Project_Data.Scripts
 
         int getMaxMultiplier()
         {
-            if (level >= GameManager.MAX_LEVEL)
-                return 0;
+            //if (level1 >= GameManager.MAX_LEVEL)
+            //    return 0;
 
             if (GameManager.Instance.multiplier != -1)
             {
-                if (GameManager.Instance.multiplier + level > GameManager.MAX_LEVEL)
-                    return GameManager.MAX_LEVEL - level;
+                //if (GameManager.Instance.multiplier + level1 > GameManager.MAX_LEVEL)
+                //    return GameManager.MAX_LEVEL - level1;
             
                 return GameManager.Instance.multiplier;
             }
 
-            int multiplier = 1;
+            return 1;
 
-            int ll = level;
-            double cc = 0;
-
-            for (int i = 0; ll <= GameManager.MAX_LEVEL ; i++)
-            {
-                double cp = 0;
-                if (ll > 99)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
-                }
-                else if (ll > 19)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
-                }
-                else
-                {
-                    cp = baseCost * Math.Pow(exp1, ll);
-                }
-                ll++;
-                cc += cp;
-                multiplier = i;
-                if (cc > GameManager.Instance.getCash())
-                {
-                    multiplier = i;
-                    break;
-                } 
-                if (cc == GameManager.Instance.getCash())
-                {
-                    multiplier = i + 1;
-                    break;
-                }
-            }
-            multiplier = multiplier == 0 ? 1 : multiplier;
-            return multiplier;
+            //for (int i = 0; ll <= GameManager.MAX_LEVEL ; i++)
+            //{
+            //    double cp = 0;
+            //    if (ll > 99)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+            //    }
+            //    else if (ll > 19)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
+            //    }
+            //    else
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, ll);
+            //    }
+            //    ll++;
+            //    cc += cp;
+            //    multiplier = i;
+            //    if (cc > GameManager.Instance.getCash())
+            //    {
+            //        multiplier = i;
+            //        break;
+            //    } 
+            //    if (cc == GameManager.Instance.getCash())
+            //    {
+            //        multiplier = i + 1;
+            //        break;
+            //    }
+            //}
+            //multiplier = multiplier == 0 ? 1 : multiplier;
+            //return multiplier;
         }
 
         public IEnumerator pipeAnimation()

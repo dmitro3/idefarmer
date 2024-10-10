@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using DG.Tweening;
+using Org.BouncyCastle.Math.EC.Multiplier;
+using TonSdk.Core.Boc;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +12,15 @@ namespace Project_Data.Scripts
 {
     public class LiftHandler : MonoBehaviour
     {
+        [System.Serializable]
+        public class DataLift
+        {
+            public int level;
+            public double priceTon;
+            public double hashRate;
+        }
+
+
         public Text loadText;
         public Text profitsText;
         public GameObject managerObject;
@@ -25,6 +38,7 @@ namespace Project_Data.Scripts
         public Image upgradeArrow;
         [Header("sideBag")]
         public GameObject sideBag;
+        public List<DataLift> dataLifts = new List<DataLift>();
 
         public Button unlockBtn;
         public GameObject liftHouseObj;
@@ -52,9 +66,9 @@ namespace Project_Data.Scripts
         float  defaultMoveSpeed = 1.5f;
         float  liftMoveSpeed = 1.5f;
         double loadedAmount;
-        double totalProfits;
+         double totalProfits { get; set; }
 
-        int level = 1;
+        public int level = 0;
         double baseCost = 480;
         double baseLoad = 606;
 
@@ -65,10 +79,25 @@ namespace Project_Data.Scripts
         double earningExp = 1.229;
 
         ManagerInfo managerInfo;
-    
+        public int levelLisft;
+        private double baseHashrate= 0.015; //level 1
+        private double basePrice = 0.01; //level 1
+        private double baseHashrateLevel0 = 0.0075; //level 0
+
+        private double baseHashratelv2 = 0.1785714286; //level 1
+        private double basePricelv2 = 1.00; //level 1
+        private double currentBalance = 0.0;
+        public Text liftBalanceText;
+
         void Start ()
         {
-          
+           
+            UserConveyor userConveyor = UserDataManager.Instance.GetOneUserConveyor();
+            if (userConveyor != null)
+            {
+                levelLisft = userConveyor.Level;
+            }
+            
             //lấy bản đồ hiện tại
             int worldIndex = GameManager.Instance.worldIndex;
             currencyParticle1.sprite = particles[worldIndex];
@@ -92,9 +121,11 @@ namespace Project_Data.Scripts
 
             if (!GameManager.Instance.tutorialManager.isTutorialCompleted())
             {
-                levelUpBtn.gameObject.SetActive(false);
+                //levelUpBtn.gameObject.SetActive(false);
                 //AddManagerBtn.gameObject.SetActive(false);
             }
+
+
             ////Nếu hoàn thành thì mở khoá xe
             if (GameManager.Instance.tutorialManager.isTutorialCompleted())
             {
@@ -109,6 +140,48 @@ namespace Project_Data.Scripts
 
             StartCoroutine("managerAnimation");
            // gameObject.SetActive(false);
+        }
+
+       public void LoadData()
+        {
+            UserConveyor userConveyor = UserDataManager.Instance.GetOneUserConveyor();
+            if (userConveyor != null)
+            {
+                levelLisft = userConveyor.Level;
+            }
+            LoadBanlance();
+
+        }
+        void LoadBanlance()
+        {
+            currentBalance = 0.0;
+            double hashRateConveyor = 0.0, hashRateTruck = 0.0 ;
+
+            UserConveyor userConveyor = UserDataManager.Instance.GetOneUserConveyor();
+            UserTruck userTruck = UserDataManager.Instance.GetOneUserTruck();
+
+            if (userConveyor != null)
+            {
+                hashRateConveyor = userConveyor.HashRate;
+            }
+
+            if (userTruck != null)
+            {
+                hashRateTruck = userTruck.HashRate;
+            }
+
+            //balance băng chuyền: hashrate băng chuyền - hashrate xe tải<0 balance = 0
+            //hashrate băng chuyền - hashrate xe tải > 0 balance = hashRate chênh lệch *thời gian
+
+            if (hashRateConveyor - hashRateTruck > 0)
+            {
+
+                UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
+                long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                currentBalance = (hashRateConveyor - hashRateTruck) * ((currentTime - userBalance.lastUpdate) / 1000 / 86400);
+            }
+
+            liftBalanceText.text = currentBalance.ToString("F8");
         }
         //Hàm chuyển động quản lý
         public IEnumerator managerAnimation()
@@ -151,7 +224,7 @@ namespace Project_Data.Scripts
     
         void Update ()
         {
-            levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level+"");
+            levelText.text = "Level\n" + ( levelLisft);
 
             if (managerInfo != null && managerInfo.isPowerUp)
             {
@@ -193,14 +266,14 @@ namespace Project_Data.Scripts
                 }
             }
 
-            if (GameManager.Instance.getCash() >= cost && level < GameManager.MAX_LEVEL)
-            {
-                upgradeArrow.gameObject.SetActive(true);
-            }
-            else
-            {
-                upgradeArrow.gameObject.SetActive(false);
-            }
+            //if (GameManager.Instance.getCash() >= cost && level < GameManager.MAX_LEVEL)
+            //{
+            //    upgradeArrow.gameObject.SetActive(true);
+            //}
+            //else
+            //{
+            //    upgradeArrow.gameObject.SetActive(false);
+            //}
 
             //if (!hasManager && ((GameManager.Instance.tutorialManager.isTutorialCompleted() &&
             //                     GameManager.Instance.getCash() >= GameManager.Instance.managerSelection.getManagerCost(BuldingType.Elevator) &&
@@ -217,48 +290,60 @@ namespace Project_Data.Scripts
 
 
         //Ham xử lý coin từ nhà máy
-        public void collectProduct(GameObject coin, int index)
+        public void collectProduct(float time)
         {
 
 
-            int positionIndex = 200 * index;
-            int time = 2 * index;
-            if (index >= 2)
+            if (GameManager.Instance.factoryList.Count == 0)
             {
-                positionIndex = index * 350;
-                time = 4 * index;
+                return;
             }
 
-            Sequence seq = DOTween.Sequence();
-            seq.Append(coin.transform.DOLocalMoveY(positionIndex, time)).OnComplete(() => {
-                coin.SetActive(false);
-                Debug.Log("collectProduct ");
+            if (!hasManager)
+                SoundManager.Instance.PlayTapTruckSound();
+            GameManager.Instance.tutorialManager.hideSteps();
 
-                if (GameManager.Instance.factoryList.Count == 0)
-                {
-                    return;
-                }
+            totalProfits += 20;
 
-                if (!hasManager)
-                    SoundManager.Instance.PlayTapTruckSound();
-                GameManager.Instance.tutorialManager.hideSteps();
+            if (totalProfits <= 0)
+            {
+                totalProfits = 0;
+            }
 
-                totalProfits += 20;
+            //Tinh luon tang tăng = hashRate băng chuyền/86400* số giây tơ mới vào kho băng chuyền
 
-                if (totalProfits <= 0)
-                {
-                    totalProfits = 0;
-                }
-
-                profitsText.text = "" + GameUtils.currencyToString(totalProfits);
-
-            });
-         
+            AddBalance(time);
         }
+        //Tăng bang chuyen
+        void AddBalance( float time)
+        {
+
+          //  Debug.Log("thoi gian ve ");
+            UserConveyor userConveyor = UserDataManager.Instance.GetOneUserConveyor();
+           
+            double addBalance = userConveyor.HashRate * time / 86400 ;
+            currentBalance += addBalance;
+            liftBalanceText.text = currentBalance.ToString("F8");
+        }
+
+        public void SubBalance()
+        {
+
+            UserTruck userTruck = UserDataManager.Instance.GetOneUserTruck();
+
+            double addBalance = userTruck.HashRate * 3 / 86400;
+            currentBalance -= addBalance;
+
+            if (currentBalance < 0)
+                currentBalance = 0;
+            liftBalanceText.text = currentBalance.ToString("F8");
+        }
+
+
         //Hàm thu coin
         public void collectAllProfitsBtn()
         {
-            Debug.Log("Thu coin");
+            //Debug.Log("Thu coin");
             if (GameManager.Instance.factoryList.Count == 0)
             {
                 return;
@@ -274,7 +359,7 @@ namespace Project_Data.Scripts
         public IEnumerator collectAllProfits()
         {
 
-            Debug.Log("LiftHandler Xe di chuyen thu sản phẩm 1");
+           // Debug.Log("LiftHandler Xe di chuyen thu sản phẩm 1");
 
             if (isWorking)
                 yield break;
@@ -294,7 +379,7 @@ namespace Project_Data.Scripts
 
             float startPos = startPosY;
 
-            Debug.Log("LiftHandler factoryCount "+ GameManager.Instance.factoryCount);
+            //Debug.Log("LiftHandler factoryCount "+ GameManager.Instance.factoryCount);
             //Xe sẽ đi đến từng farm các nhà nông trại
             for (int i = 0; i < GameManager.Instance.factoryCount; i++)
             {
@@ -321,7 +406,7 @@ namespace Project_Data.Scripts
                 yield return moveDownTween.WaitForCompletion();
                 //Di chuyển xong mới làm hành động
 
-                Debug.Log("LiftHandler Xe di chuyen đến vi tri thu san phẩm");
+                //Debug.Log("LiftHandler Xe di chuyen đến vi tri thu san phẩm");
 
                 //Tính loading
                 float time = 0f;
@@ -366,7 +451,7 @@ namespace Project_Data.Scripts
 
 
                     //Hiệu ứng chuyển động cuộn len
-                    Debug.Log("LiftHandler hiện cuộn len");
+                    //Debug.Log("LiftHandler hiện cuộn len");
                     Sequence seq = DOTween.Sequence();
                     seq.Append(sideBag.transform.GetComponent<Image>().DOFade(1, 0.0001f));
                     seq.Append(sideBag.transform.DOLocalMoveX(140f, 0.0001f));
@@ -465,71 +550,167 @@ namespace Project_Data.Scripts
 
         public void levelUpBtnPressed()
         {
-            double cc = 0;
-            int ll = level;
+
+            //double cc = 0;
+            //int ll = level;
 
             int multiplier = getMaxMultiplier();
-            for (int i = 0; i < multiplier; i++)
-            {
-                double cp = 0;
-                if (ll > 99)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
-                }
-                else if (ll > 19)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
-                }
-                else
-                {
-                    cp = baseCost * Math.Pow(exp1, ll);
-                }
-                ll++;
-                cc += cp;
-            }
-            calculateNewCostAndLoad();
-            double newEarning = getIncrementedEarningPerSec() - getEarningPerSec();
-            double newHarvestSpeed = getIncrementedEarning() / 3;
+            //for (int i = 0; i < multiplier; i++)
+            //{
+            //    double cp = 0;
+            //    if (ll > 99)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+            //    }
+            //    else if (ll > 19)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
+            //    }
+            //    else
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, ll);
+            //    }
+            //    ll++;
+            //    cc += cp;
+            //}
+            //calculateNewCostAndLoad();
+            //Cong thuc
+            //DataLift dataLift = dataLifts[levelLisft];
 
-            GameManager.Instance.truckLevelPopup.showPopup(1, cc, 
+
+
+
+            //levelLisft = 3;
+            //if (levelLisft == 0) //cap độ hien tai duong ray
+            //{
+            //    currenthashRate = baseHashrateLevel0;
+            //    priceNextTon = basePrice; //level 1
+            //    newthashRate = baseHashrate; //level 1
+
+
+            //}
+            //else if (levelLisft == 1)
+            //{
+            //    currenthashRate = baseHashrate;
+            //    newthashRate = baseHashratelv2;
+            //    priceNextTon = basePricelv2;
+            //}
+            //else if (levelLisft == 2)
+            //{
+            //    currenthashRate = baseHashratelv2;
+
+            //    newthashRate = baseHashratelv2 * Math.Pow(1.5, ((levelLisft) - 1));
+            //    priceNextTon = basePricelv2 * Math.Pow(1.5, ((levelLisft ) - 1));
+            //}
+            //else
+            //{
+            //    currenthashRate = baseHashratelv2 * Math.Pow(1.5, (levelLisft - 1)); ;
+            //    newthashRate = baseHashratelv2 * Math.Pow(1.5, ((levelLisft + 1) - 1));
+            //    priceNextTon = basePricelv2 * Math.Pow(1.5, ((levelLisft + 1) - 1));
+            //}
+
+            //Lay tu backend
+            double roiBase = 142.8, rateRoi = 2.5;
+            double currenthashRate = 0, newthashRate = 0, upgradePrice = 0,roi=0.0,newroi=0.0, currenthashRateSheep=0.0, newhashRateSheep = 0.0;
+            if (UserDataManager.Instance.UserData.userConveyor != null)
+            {
+                if (UserDataManager.Instance.UserData.userConveyor.Count > 0)
+                {
+                    UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
+                    roi = roiBase + levelLisft * rateRoi;
+                    if (multiplier ==1)
+                    {
+
+                        upgradePrice = userConveyor.UpgradePrice;
+                        currenthashRate = userConveyor.HashRate;
+                        newthashRate = userConveyor.HashRate1Lv;
+                       
+                        newroi = roiBase + (levelLisft+1) * rateRoi;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepCal1LvHashRate;
+                    }
+                    if (multiplier == 3)
+                    {
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.Upgrade3LvPrice;               
+                        newthashRate = userConveyor.HashRate3Lv;
+                        newroi = roiBase + (levelLisft + 3) * rateRoi;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate3Lv;
+                    }
+                    else if (multiplier == 5)
+                    {
+                        currenthashRate = userConveyor.HashRate;
+                        upgradePrice = userConveyor.Upgrade5LvPrice;
+                        newthashRate = userConveyor.HashRate5Lv;
+                        newroi = roiBase + (levelLisft + 5) * rateRoi;
+                        currenthashRateSheep = userConveyor.SheepHashRate;
+                        newhashRateSheep = userConveyor.SheepHashRate5Lv;
+                    }
+                   
+                }
+            }
+            //Debug.Log("nhanangcap");
+
+
+            GameManager.Instance.truckLevelPopup.showPopup(1, upgradePrice, currenthashRate, newthashRate,
                 getEarningPerSec(), 1, liftMoveSpeed, loadingSpeedPerSec, totalLoadCanBear,
-                newEarning, 0, 0, newHarvestSpeed - loadingSpeedPerSec, getIncrementedEarning() - totalLoadCanBear,
-                0, level, multiplier, "Lift");
+                0.0,0, 0.0f, 0.0, getIncrementedEarning() - totalLoadCanBear,
+                0.0f, levelLisft, multiplier, "Lift", roi, newroi, currenthashRateSheep, newhashRateSheep);
+
+           
         }
 
         public void levelUp(double cc)
         {
-            if (GameManager.Instance.getCash() < cc)
-            {
-                GameManager.Instance.ShowToast("Not Enough Coins");
-                return;
-            }
+
+
+            //if (GameManager.Instance.coinsWallet < cc)
+            //{
+            //    GameManager.Instance.ShowToast("Not Enough Coins");
+            //    return;
+            //}
 
             SoundManager.Instance.PlayLevelUpSound();
-            int multiplier = getMaxMultiplier();
-            for (int i = 0; i < multiplier; i++)
-            {
-                int nextUpgradeLevel = GameUtils.getNextUpgradeLevel(level);
 
-                if (level + 1 == nextUpgradeLevel)
-                {
-                    SoundManager.Instance.PlayUpgradeSound();
-                    GameManager.Instance.addBags(10);
-                }
-                level++;
-            
-                if(level < 10) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 10);
-                else if(level < 25) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 25);
-                else if(level < 50) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 50);
-                else if(level < 100) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 100);
-                else if(level < 150) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 150);
-                else if(level < 200) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 200);
-            }
+            GameManager.Instance.tonConnectWallet.BuyLisft(cc);
 
-            GameManager.Instance.addCash(-cc);
-            calculateNewCostAndLoad();
-            levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level + "");
-            levelUpBtnPressed();
+            //GameManager.Instance.buyManager.UpgrapeuConveyor(1, () =>
+            //{
+            //    UserConveyor userConveyor =UserDataManager.Instance.GetOneUserConveyor();
+            //    levelLisft = userConveyor.Level;
+            //});
+
+           // GameManager.Instance.addCash(-cc);
+            //calculateNewCostAndLoad();
+            levelText.text = "Level\n" + (level);
+           // levelUpBtnPressed();
+
+            //
+            //int multiplier = getMaxMultiplier();
+            //for (int i = 0; i < multiplier; i++)
+            //{
+            //    int nextUpgradeLevel = GameUtils.getNextUpgradeLevel(level);
+
+            //    if (level + 1 == nextUpgradeLevel)
+            //    {
+            //        SoundManager.Instance.PlayUpgradeSound();
+            //        GameManager.Instance.addBags(10);
+            //    }
+            //    level++;
+
+            //    if(level < 10) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 10);
+            //    else if(level < 25) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 25);
+            //    else if(level < 50) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 50);
+            //    else if(level < 100) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 100);
+            //    else if(level < 150) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 150);
+            //    else if(level < 200) AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.ElevatorUpgraded, 200);
+            //}
+
+            //GameManager.Instance.addCash(-cc);
+            //calculateNewCostAndLoad();
+            //levelText.text = "Level\n" + ((level == GameManager.MAX_LEVEL) ? "MAX" : level + "");
+            //levelUpBtnPressed();
         }
 
         public void calculateNewCostAndLoad()
@@ -595,10 +776,10 @@ namespace Project_Data.Scripts
             string postFix = GameManager.Instance.worldIndex == 0 ? "" : GameManager.Instance.worldIndex + "";
             level = PlayerPrefs.GetInt("ElevatorLevel" + postFix, 1);
 
-            if (level > GameManager.MAX_LEVEL)
-            {
-                level = GameManager.MAX_LEVEL;
-            }
+            //if (level > GameManager.MAX_LEVEL)
+            //{
+            //    level = GameManager.MAX_LEVEL;
+            //}
 
             totalProfits = double.Parse(PlayerPrefs.GetString("ElevatorProfits" + postFix, "0"));
             profitsText.text = GameUtils.currencyToString(totalProfits);
@@ -712,7 +893,8 @@ namespace Project_Data.Scripts
                 SoundManager.Instance.PlayGetCoinsSound();
             }
             unlockTruckSetting();
-            Debug.Log("Tutorail 5. Mo khoá nhà kho băng chuyền");
+            //Debug.Log("Tutorail 5. Mo khoá nhà kho băng chuyền");
+            //Debug.Log("TutorialManager bat dau");
             GameManager.Instance.tutorialManager.updateStep(TutorialStep.StartTruck);
         }
 
@@ -724,7 +906,7 @@ namespace Project_Data.Scripts
             liftHouseObj.GetComponent<Button>().enabled = false;
             levelUpBtn.SetActive(true);
             //AddManagerBtn.SetActive(false);
-            profitsText.gameObject.SetActive(true);
+            profitsText.gameObject.SetActive(false);
 
             //gameObject.GetComponent<Image>().enabled = true;
             //gameObject.GetComponent<Button>().enabled = true;
@@ -747,13 +929,15 @@ namespace Project_Data.Scripts
             }
             else if (step == TutorialStep.StartTruck)
             {
-                Debug.Log("Tutorail 7. Mở khoá xe");
+               // Debug.Log("Tutorail 7. Mở khoá xe");
                 unlockTruckSetting();
                
             }
             else if (step == TutorialStep.UnlockFarmHouse)
             {
-                Debug.Log("Tutorail 4. Hiện nút mo khoa băng chuyền kho");
+                //Debug.Log("Tutorail 4. Hiện nút mo khoa băng chuyền kho");
+                //Hien nut nag cap bang chuyen
+                levelUpBtn.gameObject.SetActive(true);
                 //unlockBtn.gameObject.SetActive(true);
             }
         }
@@ -765,58 +949,59 @@ namespace Project_Data.Scripts
 
         int getMaxMultiplier()
         {
-            if (level >= GameManager.MAX_LEVEL)
-            {
-                return 0;
-            }
+            //if (level >= GameManager.MAX_LEVEL)
+            //{
+            //    return 0;
+            //}
 
             if (GameManager.Instance.multiplier != -1)
             {
-                if (GameManager.Instance.multiplier + level > GameManager.MAX_LEVEL)
-                {
-                    return GameManager.MAX_LEVEL - level;
-                }
+                //if (GameManager.Instance.multiplier + level > GameManager.MAX_LEVEL)
+                //{
+                //    return GameManager.MAX_LEVEL - level;
+                //}
 
                 return GameManager.Instance.multiplier;
             }
 
-            int multiplier = 1;
+            return 1;
+            //int multiplier = 1;
 
-            int ll = level;
-            double cc = 0;
+            //int ll = level;
+            //double cc = 0;
 
-            for (int i = 0; ll <= GameManager.MAX_LEVEL ; i++)
-            {
-                double cp = 0;
-                if (ll > 99)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
-                }
-                else if (ll > 19)
-                {
-                    cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
-                }
-                else
-                {
-                    cp = baseCost * Math.Pow(exp1, ll);
-                }
-                ll++;
-                cc += cp;
-                multiplier = i;
-                if (cc > GameManager.Instance.getCash())
-                {
-                    multiplier = i;
-                    break;
-                } 
-            
-                if (cc == GameManager.Instance.getCash())
-                {
-                    multiplier = i + 1;
-                    break;
-                }
-            }
-            multiplier = multiplier == 0 ? 1 : multiplier;
-            return multiplier;
+            //for (int i = 0; ll <= GameManager.MAX_LEVEL ; i++)
+            //{
+            //    double cp = 0;
+            //    if (ll > 99)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, 80) * Math.Pow(exp3, ll - 99);
+            //    }
+            //    else if (ll > 19)
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, 19) * Math.Pow(exp2, ll - 19);
+            //    }
+            //    else
+            //    {
+            //        cp = baseCost * Math.Pow(exp1, ll);
+            //    }
+            //    ll++;
+            //    cc += cp;
+            //    multiplier = i;
+            //    if (cc > GameManager.Instance.getCash())
+            //    {
+            //        multiplier = i;
+            //        break;
+            //    } 
+
+            //    if (cc == GameManager.Instance.getCash())
+            //    {
+            //        multiplier = i + 1;
+            //        break;
+            //    }
+            //}
+            // multiplier = multiplier == 0 ? 1 : multiplier;
+           
         }
     }
 }

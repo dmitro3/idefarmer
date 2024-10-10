@@ -44,15 +44,15 @@ namespace Project_Data.Scripts
 
         private void CheckRewardAvailabilityOnStart()
         {
-            _facebookRewardAvailable = PlayerPrefs.GetInt("fbAvailable") == 0 ? true : false;
-            _instagramRewardAvailable = PlayerPrefs.GetInt("instAvailable") == 0 ? true : false;
-            _twitterRewardAvailable = PlayerPrefs.GetInt("twitterAvailable") == 0 ? true : false;
-            _youTubeRewardAvailable = PlayerPrefs.GetInt("youTubeAvailable") == 0 ? true : false;
+            //_facebookRewardAvailable = PlayerPrefs.GetInt("fbAvailable") == 0 ? true : false;
+            //_instagramRewardAvailable = PlayerPrefs.GetInt("instAvailable") == 0 ? true : false;
+            //_twitterRewardAvailable = PlayerPrefs.GetInt("twitterAvailable") == 0 ? true : false;
+            //_youTubeRewardAvailable = PlayerPrefs.GetInt("youTubeAvailable") == 0 ? true : false;
 
-            facebookRewardGO.SetActive(_facebookRewardAvailable);
-            instagramRewardGO.SetActive(_instagramRewardAvailable);
-            twitterRewardGO.SetActive(_twitterRewardAvailable);
-            youTubeRewardGO.SetActive(_youTubeRewardAvailable);
+            //facebookRewardGO.SetActive(_facebookRewardAvailable);
+            //instagramRewardGO.SetActive(_instagramRewardAvailable);
+            //twitterRewardGO.SetActive(_twitterRewardAvailable);
+            //youTubeRewardGO.SetActive(_youTubeRewardAvailable);
         }
 
         private void CheckRewardAvailabilityOnBack()

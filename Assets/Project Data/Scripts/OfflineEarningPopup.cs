@@ -83,7 +83,7 @@ namespace Project_Data.Scripts
             SoundManager.Instance.PlayGetCoinsSound();
 
             GameObject particle = Instantiate(coinEffect, transform.position, Quaternion.identity);
-            particle.GetComponent<CoinsEffect>().PlayEffect(gameManager.cashText.transform);
+            particle.GetComponent<CoinsEffect>().PlayEffect(gameManager.balanceTonText.transform);
 
             gameManager.addCash(offlineEarning);
             GameObject popup = transform.Find("bg").gameObject;
@@ -116,7 +116,7 @@ namespace Project_Data.Scripts
             SoundManager.Instance.PlayGetCoinsSound();
 
             GameObject particle = Instantiate(coinEffect, transform.position, Quaternion.identity);
-            particle.GetComponent<CoinsEffect>().PlayEffect(gameManager.cashText.transform);
+            particle.GetComponent<CoinsEffect>().PlayEffect(gameManager.balanceTonText.transform);
             AnalyticsManager.Instance.SendEvent(CustomAnalyticsEvent.OfflineProduction_x2_VideoWatched);
         }
     }
