@@ -18,8 +18,8 @@ public class ApiRequest : MonoBehaviour
     private float targetProgress = 0f;  // Tiến độ mục tiêu
     private float smoothSpeed = 0.05f;  // Tốc độ làm mượt loading
     public Slider loadingBar;  // Slider UI element for the loading bar
-    //private string token = "";
-    private string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQwOTI3MDk5MyIsImlhdCI6MTcyNjUwMzY3M30.spMPGwWZgMV8m9OJAdbVH1sZa2HHM2CfD39CGcUXRM4";
+    private string token = "";
+    //private string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQwOTI3MDk5MyIsImlhdCI6MTcyNjUwMzY3M30.spMPGwWZgMV8m9OJAdbVH1sZa2HHM2CfD39CGcUXRM4";
     // Start is called before the first frame update
     public static ApiRequest Instance { get; private set; }
     
@@ -36,11 +36,11 @@ public class ApiRequest : MonoBehaviour
             Destroy(gameObject); // Prevent duplicate instances
         }
     }
-    private void Start()
-    {
-        DataConfig.token = token;
-        StartCoroutine(GetUserData());
-    }
+    //private void Start()
+    //{
+    //    DataConfig.token = token;
+    //    StartCoroutine(GetUserData());
+    //}
 
     public void ReceiveParameter(string param = "")
     {

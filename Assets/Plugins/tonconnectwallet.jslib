@@ -200,50 +200,32 @@ InitializeTonConnect: function () {
         }
     },
 	
-	copyText: function (textPtr) {
+	copyText: function (text) {
 	
 	
-	var text = UTF8ToString(textPtr); // Chuyển đổi con trỏ text thành chuỗi JavaScript
-        (function(window, document, navigator) {
-            var textArea;
+ // Chuyển đổi chuỗi từ dạng Unity (Pointer) sang dạng chuỗi của JavaScript
+        var jsString = UTF8ToString(text);
 
-            function isOS() {
-                return navigator.userAgent.match(/ipad|iphone/i);
-            }
-
-            function createTextArea(text) {
-                textArea = document.createElement('textArea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-            }
-
-            function selectText() {
-                var range, selection;
-                if (isOS()) {
-                    range = document.createRange();
-                    range.selectNodeContents(textArea);
-                    selection = window.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                    textArea.setSelectionRange(0, 999999);
-                } else {
-                    textArea.select();
-                }
-            }
-
-            function copyToClipboard() {        
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-
-            function copy(text) {
-                createTextArea(text);
-                selectText();
-                copyToClipboard();
-            }
-
-            copy(text); // Gọi hàm copy với text truyền vào
-        })(window, document, navigator);
+        // Kiểm tra nếu đang chạy trên thiết bị iOS
+        var isIOS = navigator.userAgent.match(/ipad|iphone/i);
+        
+        if (isIOS) {
+            // Thêm sự kiện touchend để sao chép trên iOS
+            document.addEventListener('touchend', function() {
+                navigator.clipboard.writeText(jsString).then(function() {
+                    console.log("Copied to clipboard successfully on iOS!");
+                }).catch(function(err) {
+                    console.error("Failed to copy text on iOS: ", err);
+                });
+            }, { once: true });
+        } else {
+            // Sao chép text cho các nền tảng khác ngoài iOS
+            navigator.clipboard.writeText(jsString).then(function() {
+                console.log("Copied to clipboard successfully!");
+            }).catch(function(err) {
+                console.error("Failed to copy text: ", err);
+            });
+        }
 		
 	
 	},
