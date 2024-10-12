@@ -22,9 +22,12 @@ public class DataItem
     public string Status { get; set; }
     public string TransactionHash { get; set; }
     public bool AutomationTransfer { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? SucceededAt { get; set; }  // Nullable DateTime
-    public DateTime? ProcessedAt { get; set; }  // Nullable DateTime
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? SucceededAt { get; set; }
+    public string QueryId { get; set; }
+    public bool Processed { get; set; }
+    public bool WasRecreated { get; set; }
+    public long ProcessedAt { get; set; }
 }
 
 public class TotalData
@@ -209,9 +212,7 @@ public class UserDataManager : MonoBehaviour
         double balanceTon = 0.0;
         try
         {
-            UserBalance userBalance = UserData.userBalances[0];
-           // Debug.Log("UserData.userSheepHashRate " + UserData.userSheepHashRate);
-
+            UserBalance userBalance = UserData.userBalances[1];
             long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             balanceTon = (currentTime - userBalance.lastUpdate) / 1000 / 86400 * UserData.userSheepHashRate + userBalance.unprocessed - userBalance.pending - userBalance.used;
 
@@ -230,12 +231,14 @@ public class UserDataManager : MonoBehaviour
     /// <returns></returns>
     public double GetBalanceSheepCoin()
     {
-        double balanceSheepCoin = 0.0;
+        double balanceTon = 0.0;
         try
         {
             UserBalance userBalance = UserData.userBalances[1];
-            balanceSheepCoin = userBalance.unprocessed - userBalance.pending - userBalance.used;
-            return balanceSheepCoin;
+            long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            balanceTon = (currentTime - userBalance.lastUpdate) / 1000 / 86400 * UserData.userSheepHashRate + userBalance.unprocessed - userBalance.pending - userBalance.used;
+
+            return balanceTon;
         }
         catch
         {

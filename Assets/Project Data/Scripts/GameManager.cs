@@ -294,7 +294,7 @@ namespace Project_Data.Scripts
         }
         public void addBallanceSheepTon()
         {
-            double balanceTon = UserDataManager.Instance.GetBalanceAddSeepTon();
+            double balanceTon = UserDataManager.Instance.GetBalanceSheepCoin();
             balanceSheepCoinText.text = balanceTon.ToString("F8");
         }
         public void addCash(double cash)

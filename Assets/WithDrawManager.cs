@@ -1,12 +1,11 @@
 ﻿using Project_Data.Scripts;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using static WalletManager;
 using UnityEngine.Networking;
-using TonSdk.Connect;
+using System.Runtime.InteropServices;
 
 public class WithDrawManager : MonoBehaviour
 {
@@ -23,16 +22,38 @@ public class WithDrawManager : MonoBehaviour
     public TextMeshProUGUI bumberCoin;
     private double maxCoinInPut = 0.8;
     private string nameTitle = "";
+    private bool isdrawcall;
+
+    //[DllImport("__Internal")]
+    //private static extern void ShowNumberInput(string inputFieldName);
+
+    //[DllImport("__Internal")]
+    //private static extern void CreateInputFieldElement(string inputFieldName);
     private void Start()
     {
+        isdrawcall = false;
         nameTitle = GetName(type);
-        Debug.Log("Wallet Balance WithDrawManager "+ UserDataManager.Instance.walletAddress);
+        // Tạo một input element cho WebGL
+        //#if UNITY_WEBGL && !UNITY_EDITOR
+        //        CreateInputFieldElement(inputCoin.name);
+        //#endif
+
+        // Đăng ký sự kiện khi người dùng click vào InputField
+        //inputCoin.onEndEdit.AddListener(OnInputFieldClicked);
+        //Debug.Log("Wallet Balance WithDrawManager "+ UserDataManager.Instance.walletAddress);
         if (UserDataManager.Instance.walletAddress.Trim().Length > 0)
         {
             StartCoroutine(GetWalletBalance(UserDataManager.Instance.walletAddress.Trim()));
         }
 
     }
+    // Khi InputField được click, gọi hàm JavaScript để hiển thị hộp thoại nhập số
+    //void OnInputFieldClicked(string value)
+    //{
+    //    #if UNITY_WEBGL && !UNITY_EDITOR
+    //            ShowNumberInput(inputCoin.name);
+    //    #endif
+    //}
     IEnumerator GetWalletBalance(string address)
     {
         
@@ -99,7 +120,8 @@ public class WithDrawManager : MonoBehaviour
     }
     public void WIthDraw()
     {
-
+        if (isdrawcall)
+            return;
         //Kiểm tra qua ví
         if (UserDataManager.Instance.walletAddress.Trim().Length <= 0)
         {
@@ -111,7 +133,7 @@ public class WithDrawManager : MonoBehaviour
         if (inputCoin.text.Trim().Length <= 0)
         {
 
-            GameManager.Instance.ShowToast("Please Input "+ nameTitle);
+            GameManager.Instance.ShowToast("Please Input " + nameTitle);
             return;
         }
 
@@ -131,6 +153,7 @@ public class WithDrawManager : MonoBehaviour
                 GameManager.Instance.ShowToast(nameTitle + " exceeds the allowed number");
                 return;
             }
+            isdrawcall = true;
             GameManager.Instance.buyManager.WithDrawTonCoin(UserDataManager.Instance.walletAddress.Trim(), type + "", tonCoin.ToString(), () =>
             {
 
@@ -175,8 +198,12 @@ public class WithDrawManager : MonoBehaviour
     }
     public void OpenSucessPannel()
     {
-
-        successPanel.SetActive(true);
+        GameManager.Instance.buyManager.LoadData(() => {
+            successPanel.SetActive(true);
+            GameManager.Instance.walletManager.LoadHistory();
+            isdrawcall = false;
+        });
+      
     }
 
     public void ClodeAllPanel()

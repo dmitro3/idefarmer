@@ -6,11 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using TonSdk.Connect;
-using TonSdk.Core;
 using UnityEngine.Networking;
-using TonSdk.Core.Boc;
-using System.Xml.Linq;
-using System.Threading.Tasks;
 using System.Linq;
 
 
@@ -43,8 +39,7 @@ public class WalletManager : MonoBehaviour
 
     void Start()
     {
-        tonCoinText.text = GameManager.Instance.GetBalanceTon();
-        sheepCoinText.text = GameManager.Instance.GetBalanceSheepCoin();
+      
         prevPageButton.onClick.AddListener(PreviousPage);
         nextPageButton.onClick.AddListener(NextPage);
         accountNameTxt.text = UserDataManager.Instance.UserData.user.userName;
@@ -199,7 +194,7 @@ public class WalletManager : MonoBehaviour
     #endregion
 
     #region Loaddata
-    private void LoadHistory()
+    public void LoadHistory()
     {
         GameManager.Instance.buyManager.LoadHistory(1, 100, () =>
         {
@@ -214,6 +209,9 @@ public class WalletManager : MonoBehaviour
 
 
         });
+        
+        tonCoinText.text = GameManager.Instance.GetBalanceTon();
+        sheepCoinText.text = GameManager.Instance.GetBalanceSheepCoin();
     }
     void DisplayPage(int pageIndex)
     {
@@ -233,7 +231,7 @@ public class WalletManager : MonoBehaviour
             GameObject row = Instantiate(rowPrefab, content);
             TextMeshProUGUI[] columns = row.GetComponentsInChildren<TextMeshProUGUI>();
 
-            columns[0].text = dataList[i].CreatedAt.ToString("dd/MM/yyyy HH:mm");
+            columns[0].text = dataList[i].CreatedAt?.ToString("dd/MM/yyyy HH:mm");
             columns[1].text = dataList[i].Amount.ToString("F4") + " TON";
             if (!string.IsNullOrEmpty(dataList[i].Status))
             {
@@ -287,12 +285,13 @@ public class WalletManager : MonoBehaviour
     public void DrawTon()
     {
 
+
         if (UserDataManager.Instance.walletAddress.Trim().Length <= 0)
         {
             GameManager.Instance.ShowToast("Please Connect Wallet ");
             return;
         }
-           
+
 
         withDrawPanel.SetActive(true);
 

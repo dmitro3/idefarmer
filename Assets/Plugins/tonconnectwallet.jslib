@@ -230,11 +230,23 @@ InitializeTonConnect: function () {
 	
 	},
 	
-
 	
 	openLinkTelegramFromUnity: function (link) {
-	var jsLink = UTF8ToString(link);
-        window.open(jsLink, "_blank");
+	 var jsLink = UTF8ToString(link);
+	 var jsLinkDes = "https://t.me";
+  
+	 if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+		 
+	  if (jsLink.startsWith(jsLinkDes)) 
+	  {
+		  
+	   window.Telegram.WebApp.openTelegramLink(jsLink);
+	  } 
+	  else 
+	  {
+	   window.Telegram.WebApp.openLink(jsLink, {try_instant_view: true});
+	  }
+	 }
 	},
 	
 	openLinkFromUnity: function (link) {

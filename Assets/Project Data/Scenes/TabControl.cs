@@ -116,12 +116,13 @@ public class TabControl : MonoBehaviour
                    
                 }
 
-              
+               
 
                 //newItem.transform.Find("sheeptaskAmount").GetComponent<TextMeshProUGUI>().text ="X" + quest.SheepAmount.ToString("F2");
 
                 // Đặt scale là 1 để không bị lỗi hiển thị                                              //ob.transform.position = pos;
             }
+            UpdatePartContentHeight();
 
             List<Quest> questDialyData = UserDataManager.Instance.questData.Where(n => !n.IsDone &&  n.QuestType.Equals("DAILY")).ToList();
             Debug.Log("questDialyData " + questDialyData.Count);
@@ -182,7 +183,7 @@ public class TabControl : MonoBehaviour
 
                     if (img.name == "icondone")
                     {
-                        Debug.Log("okok");
+                        
                         if (itemQuest.IsDone)
                         {
 
@@ -200,45 +201,50 @@ public class TabControl : MonoBehaviour
 
                 }
             }
+            UpdateDailyContentHeight();
 
         });
        
     }
+    void UpdatePartContentHeight()
+    {
+        RectTransform content = transformPartner.gameObject.GetComponent<RectTransform>();
+        // Tính toán tổng chiều cao: Height của từng mục + khoảng cách (Spacing)
+        float totalHeight = content.childCount * (itemPartnerPrefab.GetComponent<RectTransform>().sizeDelta.y + 10); // 10 là khoảng cách giữa các mục
+        content.sizeDelta = new Vector2(content.sizeDelta.x, totalHeight);
+    }
+    void UpdateDailyContentHeight()
+    {
+        RectTransform content = transformDialy.gameObject.GetComponent<RectTransform>();
+        // Tính toán tổng chiều cao: Height của từng mục + khoảng cách (Spacing)
+        float totalHeight = content.childCount * (itemPartnerPrefab.GetComponent<RectTransform>().sizeDelta.y + 10); // 10 là khoảng cách giữa các mục
+        content.sizeDelta = new Vector2(content.sizeDelta.x, totalHeight);
+    }
     // Hàm xử lý có tham số
     void DoQuest(int index, string hyperLink)
     {
-        Debug.Log("index " + index + " link " + hyperLink);
         if (!string.IsNullOrEmpty(hyperLink))
         {
 
-//#if UNITY_WEBGL && !UNITY_EDITOR
-                if (hyperLink.Trim().Contains("t.me"))
-                {
-
-                     OpenTelegramLink(hyperLink);
-
-                 }
-                else
-                {
-
-                    OpenBrowserLink(hyperLink);
-
-                }
+            //#if UNITY_WEBGL && !UNITY_EDITOR
+            OpenTelegramLink(hyperLink);
             //#endif
             GameManager.Instance.buyManager.DoQuest(index, () =>
             {
                 GameManager.Instance.buyManager.SucessQuest(index, () =>
                 {
-                    GameManager.Instance.buyManager.LoadData();
-                    foreach (Transform child in transformPartner.transform)
-                    {
-                        Destroy(child.gameObject);
-                    }
-                    foreach (Transform child in transformDialy.transform)
-                    {
-                        Destroy(child.gameObject);
-                    }
-                    CreateItemPartner();
+                    GameManager.Instance.buyManager.LoadData(()=> {
+                        foreach (Transform child in transformPartner.transform)
+                        {
+                            Destroy(child.gameObject);
+                        }
+                        foreach (Transform child in transformDialy.transform)
+                        {
+                            Destroy(child.gameObject);
+                        }
+                        CreateItemPartner();
+                    });
+                   
 
                 });
 
@@ -270,7 +276,6 @@ public class TabControl : MonoBehaviour
     {
         // Xóa các hàng hiện tại
 
-        Debug.Log("chon view 1");
         scrollView1.SetActive(true);
         Tab1ImageBg.SetActive(true);
 

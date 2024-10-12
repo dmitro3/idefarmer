@@ -185,7 +185,7 @@ public class BuyManager : MonoBehaviour
         {
 
             string responseText = request.downloadHandler.text;
-            Debug.Log("Response history: " + responseText);
+            //Debug.Log("Response history: " + responseText);
 
             UserDataManager.Instance.withDrawHistoryData= JsonConvert.DeserializeObject<WithDrawHistoryData>(responseText);
          

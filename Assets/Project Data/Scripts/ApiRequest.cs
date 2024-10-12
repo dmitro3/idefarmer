@@ -39,7 +39,7 @@ public class ApiRequest : MonoBehaviour
     //private void Start()
     //{
     //    DataConfig.token = token;
-    //    StartCoroutine(GetUserData());
+    //    StartCoroutine(GetUserData(token));
     //}
 
     public void ReceiveParameter(string param = "")
@@ -50,14 +50,12 @@ public class ApiRequest : MonoBehaviour
         {
             token = param;
             DataConfig.token = param;
-            StartCoroutine(GetUserData());
+            StartCoroutine(GetUserData(param));
 
         }
-
-        // Bạn có thể xử lý tham số ở đây, như lưu vào biến, hoặc sử dụng trong game logic
     }
 
-    IEnumerator GetUserData()
+    IEnumerator GetUserData(string token)
     {
         string apiUrl= DataConfig.API + DataConfig.USER_DATA_METHOD;
 
@@ -94,7 +92,7 @@ public class ApiRequest : MonoBehaviour
             yield return null;  // Chờ một khung hình trước khi tiếp tục
         }
 
-//        Debug.Log("API Response tai xong : ");
+       // Debug.Log("API Response tai xong : ");
         // Khi dữ liệu đã tải xong
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
@@ -103,7 +101,7 @@ public class ApiRequest : MonoBehaviour
         else
         {
             string responseText = request.downloadHandler.text;
-           // Debug.Log("Response: " + responseText);
+          // Debug.Log("Response: " + responseText);
             UserData userData = JsonConvert.DeserializeObject<UserData>(responseText);
             //Debug.Log(userData);
             // Save the response data into UserDataManager
