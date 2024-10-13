@@ -112,6 +112,7 @@ public class UserConveyor
     public double SheepCal1LvHashRate { get; set; }      // Tốc độ băm sheep cấp 1
     public double SheepHashRate3Lv { get; set; }         // Tốc độ băm sheep cấp 3
     public double SheepHashRate5Lv { get; set; }         // Tốc độ băm sheep cấp 5
+    public double Balance { get; set; }         // Tốc độ băm sheep cấp 5
 }
 public class UserSheepFarm
 {
@@ -134,7 +135,7 @@ public class UserSheepFarm
     public double SheepHashRate1Lv { get; set; }         // Tốc độ băm của sheep cho cấp độ 1
     public double SheepHashRate3Lv { get; set; }         // Tốc độ băm của sheep cho cấp độ 3
     public double SheepHashRate5Lv { get; set; }         // Tốc độ băm của sheep cho cấp độ 5
-
+    public double Balance { get; set; }         // Tốc độ băm của sheep cho cấp độ 5
 }
 public class UserData
 {

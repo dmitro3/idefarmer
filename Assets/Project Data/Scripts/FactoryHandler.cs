@@ -273,26 +273,26 @@ namespace Project_Data.Scripts
         void LoadBanlanceOneFarm()
         {
             currentBalance = 0.0;
-            double hashRateFarm = 0.0, hashRateConveyor = 0.0;
+          
             UserSheepFarm userSheepFarm= UserDataManager.Instance.GetOneSheepFarm(index);
-            UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
+          //  UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
             if (userSheepFarm != null){
 
-                hashRateFarm = userSheepFarm.HashRate;
+                currentBalance = userSheepFarm.Balance;
             }
-            if (userConveyor != null)
-            {
-                hashRateConveyor = userConveyor.HashRate;
-            }
+            //if (userConveyor != null)
+            //{
+            //    hashRateConveyor = userConveyor.HashRate;
+            //}
 
-            //hashrate trại cừu - hashrate băng chuyền<0 băng chuyền đang tải > trại cừu, tồn kho = 0
-            //hashrate trại cừu - hashrate băng chuyền > 0 băng chuyền đang tải<trại cừu, tồn kho = hashRate chênh lệch *thời gian(note lại)
-            if (hashRateFarm - hashRateConveyor> 0){
+            ////hashrate trại cừu - hashrate băng chuyền<0 băng chuyền đang tải > trại cừu, tồn kho = 0
+            ////hashrate trại cừu - hashrate băng chuyền > 0 băng chuyền đang tải<trại cừu, tồn kho = hashRate chênh lệch *thời gian(note lại)
+            //if (hashRateFarm - hashRateConveyor> 0){
 
-                UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
-                long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                currentBalance = (hashRateFarm - hashRateConveyor) * ((currentTime - userBalance.lastUpdate) / 1000 / 86400);
-            }
+            //    UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
+            //    long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            //    currentBalance = (hashRateFarm - hashRateConveyor) * ((currentTime - userBalance.lastUpdate) / 1000 / 86400);
+            //}
             framBalanceText.text=currentBalance.ToString("F8");
         }
         void IncreaBalance()

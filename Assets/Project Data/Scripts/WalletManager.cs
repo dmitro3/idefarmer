@@ -186,7 +186,6 @@ public class WalletManager : MonoBehaviour
 
         accountNameTxt.text = "Account Name";
         UserDataManager.Instance.walletAddress = "";
-        //Debug.Log("UserDataManager.Instance.nameAddress " + UserDataManager.Instance.walletAddress);
         tonConnectHandler.RestoreConnectionOnAwake = false;
         await tonConnectHandler.tonConnect.Disconnect();
     }
@@ -239,15 +238,15 @@ public class WalletManager : MonoBehaviour
                 {
                     columns[2].text = "Pending...";
                 }
-                else if (dataList[i].Status.Contains("DONE"))
+                else if (dataList[i].Status.Contains("SUCCESS"))
                 {
-                    columns[2].text = "Done";
+                    columns[2].text = "Success";
                     columns[2].color = Color.green;
                 }
                 else
                 {
                     columns[2].text = "Failed";
-                    columns[2].color = Color.green;
+                    columns[2].color = Color.red;
 
                 }
             }

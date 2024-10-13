@@ -93,14 +93,14 @@ public class BuyManager : MonoBehaviour
 
     public void UpgrapeuConveyor(int sheepFarmId, Action onComplete = null)
     {
-        Debug.Log("UpgrapeuConveyor sheepFarmId " + sheepFarmId);
+        //Debug.Log("UpgrapeuConveyor sheepFarmId " + sheepFarmId);
         string apiUrl = DataConfig.API + DataConfig.UPGRADE_CONVEYOR_BUY_METHOD;
         StartCoroutine(PostRequest(apiUrl, sheepFarmId, onComplete));
        
     }
     public void UpgrapeTruck(int sheepFarmId, Action onComplete = null)
     {
-        Debug.Log("UpgrapeuTruck sheepFarmId " + sheepFarmId);
+       // Debug.Log("UpgrapeuTruck sheepFarmId " + sheepFarmId);
         string apiUrl = DataConfig.API + DataConfig.UPGRADE_TRUCK_BUY_METHOD;
         StartCoroutine(PostRequest(apiUrl, sheepFarmId, onComplete));
 
@@ -185,7 +185,7 @@ public class BuyManager : MonoBehaviour
         {
 
             string responseText = request.downloadHandler.text;
-            //Debug.Log("Response history: " + responseText);
+          //  Debug.Log("Response history: " + responseText);
 
             UserDataManager.Instance.withDrawHistoryData= JsonConvert.DeserializeObject<WithDrawHistoryData>(responseText);
          
@@ -218,9 +218,9 @@ public class BuyManager : MonoBehaviour
         {
 
             string responseText = request.downloadHandler.text;
-            Debug.Log("Response: " + responseText);
+            //Debug.Log("Response: " + responseText);
             UserData userData = JsonConvert.DeserializeObject<UserData>(responseText);
-            Debug.Log(userData);
+           // Debug.Log(userData);
             // Save the response data into UserDataManager
             UserDataManager.Instance.UserData = userData;
             //Load lai cac thong so
@@ -262,28 +262,28 @@ public class BuyManager : MonoBehaviour
             // Kiểm tra kết quả phản hồi
             if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("Response: " + request.downloadHandler.text);
+              //  Debug.Log("Response: " + request.downloadHandler.text);
                 
-                Debug.Log("HTTP Response Code: " + request.responseCode);
+                //Debug.Log("HTTP Response Code: " + request.responseCode);
                 LoadData(onComplete);
                
             }
             else
             {
                 // In ra lỗi nếu request thất bại
-                Debug.Log("Error: " + request.error);
+                //Debug.Log("Error: " + request.error);
 
                 // In ra message từ nội dung phản hồi nếu có
                 if (request.downloadHandler != null)
                 {
                     ResponeMessage refData = JsonConvert.DeserializeObject<ResponeMessage>(request.downloadHandler.text);
                     GameManager.Instance.ShowToast(refData.message);
-                    Debug.Log("Message: " + request.downloadHandler.text);
+                  //  Debug.Log("Message: " + request.downloadHandler.text);
 
                 }
 
                 // In ra HTTP response code để kiểm tra chi tiết hơn
-                Debug.Log("HTTP Response Code: " + request.responseCode);
+              //  Debug.Log("HTTP Response Code: " + request.responseCode);
             }
         }
     }
@@ -301,7 +301,7 @@ public class BuyManager : MonoBehaviour
         {
 
             string responseText = request.downloadHandler.text;
-            Debug.Log("Response task: " + responseText);
+          //  Debug.Log("Response task: " + responseText);
             List<Quest> questData = JsonConvert.DeserializeObject<List<Quest>>(responseText);
             UserDataManager.Instance.questData = questData;
             onComplete?.Invoke();
@@ -328,7 +328,7 @@ public class BuyManager : MonoBehaviour
         {
 
             string responseText = request.downloadHandler.text;
-            Debug.Log("Response GetEarnRefRequest: " + responseText);
+           // Debug.Log("Response GetEarnRefRequest: " + responseText);
             RefData refData = JsonConvert.DeserializeObject<RefData>(responseText);
             UserDataManager.Instance.refData = refData;
             onComplete?.Invoke();
@@ -365,15 +365,15 @@ public class BuyManager : MonoBehaviour
             // Kiểm tra kết quả phản hồi
             if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("Response: " + request.downloadHandler.text);
-                Debug.Log("HTTP Response Code: " + request.responseCode);
+              //  Debug.Log("Response: " + request.downloadHandler.text);
+                //Debug.Log("HTTP Response Code: " + request.responseCode);
                 //Call 1 cái veryfi
 
             }
             else
             {
                 // In ra lỗi nếu request thất bại
-                Debug.Log("Error: " + request.error);
+               // Debug.Log("Error: " + request.error);
 
                 // In ra message từ nội dung phản hồi nếu có
                 if (request.downloadHandler != null)
@@ -383,7 +383,7 @@ public class BuyManager : MonoBehaviour
                 }
 
                 // In ra HTTP response code để kiểm tra chi tiết hơn
-                Debug.Log("HTTP Response Code: " + request.responseCode);
+                //Debug.Log("HTTP Response Code: " + request.responseCode);
             }
         }
     }
@@ -411,15 +411,15 @@ public class BuyManager : MonoBehaviour
             // Kiểm tra kết quả phản hồi
             if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("Response: " + request.downloadHandler.text);
-                Debug.Log("HTTP Response Code: " + request.responseCode);
+               // Debug.Log("Response: " + request.downloadHandler.text);
+                //Debug.Log("HTTP Response Code: " + request.responseCode);
                 //Call 1 cái veryfi
                 onComplete?.Invoke();
             }
             else
             {
                 // In ra lỗi nếu request thất bại
-                Debug.Log("Error: " + request.error);
+                //Debug.Log("Error: " + request.error);
 
                 // In ra message từ nội dung phản hồi nếu có
                 if (request.downloadHandler != null)
@@ -429,7 +429,7 @@ public class BuyManager : MonoBehaviour
                 }
 
                 // In ra HTTP response code để kiểm tra chi tiết hơn
-                Debug.Log("HTTP Response Code: " + request.responseCode);
+                //Debug.Log("HTTP Response Code: " + request.responseCode);
             }
         }
     }
