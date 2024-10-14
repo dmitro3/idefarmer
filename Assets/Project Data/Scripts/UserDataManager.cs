@@ -136,6 +136,8 @@ public class UserSheepFarm
     public double SheepHashRate3Lv { get; set; }         // Tốc độ băm của sheep cho cấp độ 3
     public double SheepHashRate5Lv { get; set; }         // Tốc độ băm của sheep cho cấp độ 5
     public double Balance { get; set; }         // Tốc độ băm của sheep cho cấp độ 5
+    public double currentConveyorHashRate { get; set; }         // Tốc độ băm của sheep cho cấp độ 5
+    
 }
 public class UserData
 {

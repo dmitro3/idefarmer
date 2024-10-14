@@ -67,17 +67,19 @@ public class TabControl : MonoBehaviour
                     if (txt.name == "nametask")
                     {
                         txt.text = quest.Name;
-                       
-                    }
-                    else if (txt.name == "tontaskparneramount")
-                    {
 
-                        txt.text = "X" + quest.TonAmount.ToString("F2");
 
                     }
+                    //else if (txt.name == "tontaskparneramount")
+                    //{
+
+                    //    txt.text = "X" + quest.TonAmount.ToString("F2");
+
+                    //}
                     else if(txt.name == "sheeptaskAmount")
                     {
                         txt.text = "X" + quest.SheepAmount.ToString("F2");
+
 
                     }
                 }
@@ -98,7 +100,6 @@ public class TabControl : MonoBehaviour
 
                     if (img.name == "icondone")
                     {
-                        Debug.Log("okok");
                         if (itemQuest.IsDone)
                         {
 
@@ -125,7 +126,6 @@ public class TabControl : MonoBehaviour
             UpdatePartContentHeight();
 
             List<Quest> questDialyData = UserDataManager.Instance.questData.Where(n => !n.IsDone &&  n.QuestType.Equals("DAILY")).ToList();
-            Debug.Log("questDialyData " + questDialyData.Count);
             for (int i = 0; i < questDialyData.Count; i++)
             {
                 GameObject newItem = Instantiate(itemPartnerPrefab);
@@ -155,15 +155,15 @@ public class TabControl : MonoBehaviour
                         txt.text = quest.Name;
 
                     }
-                    else if (txt.name == "tontaskparneramount")
-                    {
+                    //else if (txt.name == "tontaskparneramount")
+                    //{
 
-                        txt.text = "X " + quest.TonAmount.ToString("F2");
+                    //    txt.text = "X " + quest.TonAmount.ToString("F2");
 
-                    }
+                    //}
                     else if (txt.name == "sheeptaskAmount")
                     {
-                        txt.text = "X " + quest.SheepAmount.ToString("F2");
+                        txt.text = "X" + quest.SheepAmount.ToString("F2");
 
                     }
                 }
@@ -210,14 +210,14 @@ public class TabControl : MonoBehaviour
     {
         RectTransform content = transformPartner.gameObject.GetComponent<RectTransform>();
         // Tính toán tổng chiều cao: Height của từng mục + khoảng cách (Spacing)
-        float totalHeight = content.childCount * (itemPartnerPrefab.GetComponent<RectTransform>().sizeDelta.y + 10); // 10 là khoảng cách giữa các mục
+        float totalHeight = content.childCount * (itemPartnerPrefab.GetComponent<RectTransform>().sizeDelta.y + 5); // 10 là khoảng cách giữa các mục
         content.sizeDelta = new Vector2(content.sizeDelta.x, totalHeight);
     }
     void UpdateDailyContentHeight()
     {
         RectTransform content = transformDialy.gameObject.GetComponent<RectTransform>();
         // Tính toán tổng chiều cao: Height của từng mục + khoảng cách (Spacing)
-        float totalHeight = content.childCount * (itemPartnerPrefab.GetComponent<RectTransform>().sizeDelta.y + 10); // 10 là khoảng cách giữa các mục
+        float totalHeight = content.childCount * (itemPartnerPrefab.GetComponent<RectTransform>().sizeDelta.y + 5); // 10 là khoảng cách giữa các mục
         content.sizeDelta = new Vector2(content.sizeDelta.x, totalHeight);
     }
     // Hàm xử lý có tham số

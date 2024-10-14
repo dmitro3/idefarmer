@@ -308,13 +308,12 @@ namespace Project_Data.Scripts
 
         void DeIncreaBalance()
         {
+            UserSheepFarm userSheepFarm = UserDataManager.Instance.GetOneSheepFarm(index);
 
-            UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
-            UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
-            long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            double addBalance = userConveyor.HashRate  / 86400 * 2;
+            double addBalance = userSheepFarm.currentConveyorHashRate  / 86400 * 2;
 
             currentBalance -= addBalance;
+
             if (currentBalance < 0)
                 currentBalance = 0;
 
@@ -527,32 +526,30 @@ namespace Project_Data.Scripts
             yield return new WaitForSeconds(0.5f);
             //Giam tiền bên farm
             subtractProfitsCollected(20);
-            //Giam balances
-            DeIncreaBalance();
-            //Tạo lông cừu và di chuyển xuống băng chuyền
-            //GameObject pro = Instantiate(prefabProduct, productParents.transform);
 
+            UserSheepFarm userSheepFarm = UserDataManager.Instance.GetOneSheepFarm(index);
+           
 
-            GameObject pro = objectPooler.GetPooledObject();
-            pro.transform.localPosition = Vector3.zero;
+            if (userSheepFarm.currentConveyorHashRate>0)
+            {
+                //Giam balances
+                DeIncreaBalance();
+                GameObject pro = objectPooler.GetPooledObject();
+                pro.transform.localPosition = Vector3.zero;
+                // Thiết lập điều khiển cho quả bóng (chỉ định Object Pool và hướng di chuyển)
+                BallController ballController = pro.GetComponent<BallController>();
+                ballController.Initialize(objectPooler);
 
-            // Thiết lập điều khiển cho quả bóng (chỉ định Object Pool và hướng di chuyển)
-            BallController ballController = pro.GetComponent<BallController>();
-            ballController.Initialize(objectPooler);
+                Sequence seq = DOTween.Sequence();
+                seq.Append(pro.transform.DOLocalMoveY(-90f, 0.5f)).OnComplete(() => {
 
-            Sequence seq = DOTween.Sequence();
-            seq.Append(pro.transform.DOLocalMoveY(-90f, 0.5f)).OnComplete(() => {
-
-                //objectPooler.ReturnObjectToPool(pro);
-                // GameManager.Instance.liftHandler.collectProduct();
-                //Xuống băng chuyền rùi di chuyển đến kho
-                collectProduct(pro, index);
-            }); ;
-
-
+                    //objectPooler.ReturnObjectToPool(pro);
+                    // GameManager.Instance.liftHandler.collectProduct();
+                    //Xuống băng chuyền rùi di chuyển đến kho
+                    collectProduct(pro, index);
+                }); ;
+            }
           
-           // GameManager.Instance.liftHandler.collectProduct(pro, index);
-            //Debug.Log("LiftHandler hiện cuộn len");
             sheepCurrent.gameObject.SetActive(false);
             worker.SetActive(true);
 
@@ -564,8 +561,7 @@ namespace Project_Data.Scripts
             }
 
             profitsText.text = "" + GameUtils.currencyToString(profits);
-            //Debug.Log("TutorialManager cap nhat");
-            //Khi con cu7u di chuyen xong thi mo khoa nha cuu
+
             GameManager.Instance.tutorialManager.updateStep(TutorialStep.UnlockFarmHouse);
         }
 
