@@ -113,7 +113,7 @@ public class RefManager : MonoBehaviour
             TextMeshProUGUI[] columns = row.GetComponentsInChildren<TextMeshProUGUI>();
 
             columns[0].text = dataList[i].userName;
-            columns[1].text = dataList[i].TON.ToString();
+            columns[1].text = dataList[i].SHEEP.ToString();
             columns[2].text = dataList[i].TON.ToString();
             //columns[2].text = dataList[i].Reward + " × " + dataList[i].Currency;
         }
