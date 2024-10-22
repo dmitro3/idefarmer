@@ -101,7 +101,7 @@ public class ApiRequest : MonoBehaviour
         else
         {
             string responseText = request.downloadHandler.text;
-            //Debug.Log(responseText);
+          //  Debug.Log(responseText);
             UserData userData = JsonConvert.DeserializeObject<UserData>(responseText);
             //Debug.Log(userData);
             // Save the response data into UserDataManager

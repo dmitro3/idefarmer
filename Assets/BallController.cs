@@ -53,6 +53,10 @@ public class BallController : MonoBehaviour
     {
         rb.velocity = Vector2.zero;  // Dừng di chuyển quả bóng
         isActive = false;
-        pool.ReturnObjectToPool(gameObject); // Trả quả bóng về Object Pool
+        if (gameObject != null)
+        {
+            pool.ReturnObjectToPool(gameObject); // Trả quả bóng về Object Pool
+        }
+       
     }
 }

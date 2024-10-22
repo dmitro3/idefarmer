@@ -152,6 +152,28 @@ public class SocketConnection : MonoBehaviour
 
     }
 
+    public void BuyPackageOnMessageReceived(string res)
+    {
+        try
+        {
+
+            if (GameManager.Instance.SpecialPackagesPanel.activeSelf)
+            {
+                GameManager.Instance.SpecialPackagesPanel.SetActive(false);
+            }
+
+            GameManager.Instance.buyManager.LoadData(() => {
+
+                GameManager.Instance.LoadDataServer();
+            });
+
+            GameManager.Instance.ShowToast("Payment Successful"); ;
+        }
+        catch
+        {
+        }
+
+    }
 
 
     // Hàm này sẽ được gọi khi đối tượng bị hủy

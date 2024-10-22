@@ -1,11 +1,9 @@
-﻿using System;
+﻿using DG.Tweening;
+using System;
 using System.Collections.Generic;
-using DG.Tweening;
-using Project_Data.Scripts.Json;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.U2D;
 using UnityEngine.UI;
 
 namespace Project_Data.Scripts
@@ -26,39 +24,44 @@ namespace Project_Data.Scripts
             public double cost;
             public double bagCost;
             public double earning;
-            public float  speed;
+            public float speed;
         }
 
         [Header("balanceTon Text")]
         public Text balanceTonText; //Text hiển thị Total Gold
+
         [Header("balanceSheepCoin Text")]
         public Text balanceSheepCoinText;  //Text hiển thị Coins/Sec
+
         [Header(" userHashRate Text")]
         public Text userHashRateText;//Text hiển thị Gem
+
         [Header("Scroll View")]
         public ScrollRect scrollView; // scrollView toàn bộ game
 
         public GameObject factoryPrefab;  //Prefab để tạo khu vuec chăn nuôi
         public GameObject addFactoryBtn; //Nút thêm khu vực chăn nuôi
-       // public GameObject unlockWithBags; //Nút mở khoá các gói
+
+        // public GameObject unlockWithBags; //Nút mở khoá các gói
         public GameObject toast; //Hộp thoại báo lỗi
+
         public GameObject faileWithdrawToast; //Hộp thoại báo lỗi
-        public TextMeshProUGUI  txtToast; //Hộp thoại báo lỗi
+        public TextMeshProUGUI txtToast; //Hộp thoại báo lỗi
         public GameObject ScrollUpBtn; //Nút kéo lên xuống
         public GameObject whatsNewObj;  //Bảng thông báo tin mới
-    
+
         public GameObject x2Profits; //Tuỳ chọn tăng diem gấp đôi
         public Text x2ProfitsLabel;  // Text trong tuỳ chọn tăng diem gấp đôi
 
         public GameObject bottomBar; //Thanh Bottom bên dưới màn hình
 
-        public List<FactoryHandler> factoryList = new List<FactoryHandler>(); //Danh sách nhà máy 
+        public List<FactoryHandler> factoryList = new List<FactoryHandler>(); //Danh sách nhà máy
         public List<Data> dataList = new List<Data>(); //Danh sách data kiếm tiền --> Quan trọng
         public LiftHandler liftHandler;   //Quan lý người chở hàng
-        public LevelPopup  levelPopup; // Lên cấp kho
-        public LevelPopup  truckLevelPopup; // Lên cấp xe
-        public LevelPopup  factoryLevelPopup; // Lên cấp farm
-        public CheatPanel  cheatPanel; // Mẹo
+        public LevelPopup levelPopup; // Lên cấp kho
+        public LevelPopup truckLevelPopup; // Lên cấp xe
+        public LevelPopup factoryLevelPopup; // Lên cấp farm
+        public CheatPanel cheatPanel; // Mẹo
         public ShopManager cashShopManager; //Shop mua hàng
         public WareHouseHandler wareHouseHandler; // Nhà kho
         public OfflineEarningPopup offlineEarningPopup; // giao dien kiem tien offline
@@ -69,22 +72,23 @@ namespace Project_Data.Scripts
         public RateMeHUD rateMeHud; // danh gia
         public ManagerSelection managerSelection; // Quảng lý nâng cấp
         public ParticleSystem explosionEffect; // hiệu ứng nổ
-      //  public GameObject coinEffect; // Efrect coin
+
+        //  public GameObject coinEffect; // Efrect coin
         public CongratsHud congratsHud; // Popup thuong
+
         public CongratsHud congratsHudAdBoost; // Popup thuong
         public ShopManager quickTimeTravelHud; // Mua gói
         public UnlockBridge bridgeManager; // quanlý mở khoá cầu
         public BuyManager buyManager;
 
-        double totalCash = 1e3;
-        double totalBags;
+        private double totalCash = 1e3;
+        private double totalBags;
 
-        double maxCash = 1e300;
+        private double maxCash = 1e300;
 
         public static GameManager Instance;
 
         public double coinsWallet;  //tien tu vi
-
 
         public int factoryCount;
         public int totalFactoryCount = 5;
@@ -96,10 +100,10 @@ namespace Project_Data.Scripts
 
         public string iosAppId;
 
-        float boostDuration;
-        bool isStartCalled;
+        private float boostDuration;
+        private bool isStartCalled;
 
-        int prestigeLvl = 1;
+        private int prestigeLvl = 1;
 
         //public static int MAX_LEVEL = 25;
 
@@ -117,12 +121,15 @@ namespace Project_Data.Scripts
         public GameObject FarmPopup;
         public Text PriceUpdareText;
         private List<GameObject> instances = new List<GameObject>();
-        void Awake()
+        public GameObject SpecialPackagesPanel;
+        public GameObject SpecialPackagesBtn;
+
+        private void Awake()
         {
             Instance = this;
         }
-    
-        void Start ()
+
+        private void Start()
         {
             // Debug.Log("factoryCount " + factoryCount);
             //Debug.Log("Gamemanager ");
@@ -144,7 +151,7 @@ namespace Project_Data.Scripts
             //Lấy giá trị tổng tiền
             totalCash += totalCash * worldIndex * 0.5;
 
-            int isFisrt = PlayerPrefs.GetInt("isFisrt",0);
+            int isFisrt = PlayerPrefs.GetInt("isFisrt", 0);
             if (isFisrt > 0)
             {
                 tutorialManager.tutorialCompleted();
@@ -152,9 +159,8 @@ namespace Project_Data.Scripts
 
             LoadDataServer();
 
-
             //Lấy danh sách manager serevr
-           // managerSelection.readFromFile();
+            // managerSelection.readFromFile();
             //Lấy danh sách cầu
             //bridgeManager.readFromFile();
             //lấy dữ liệu đã lưu server
@@ -174,13 +180,9 @@ namespace Project_Data.Scripts
             {
                 addFactoryBtn.SetActive(false);
             }
-         
-
-           
         }
-        
-        
-        void Update()
+
+        private void Update()
         {
             //Kiem tra quan ly
             tutorialManager.showTapSignForWorkers();
@@ -202,7 +204,7 @@ namespace Project_Data.Scripts
             if (factoryCount < totalFactoryCount)
             {
                 //Data data = dataList[factoryCount];
-                UserSheepFarm userSheepFarm  = UserDataManager.Instance.GetOneInAllSheepFarm(factoryCount);
+                UserSheepFarm userSheepFarm = UserDataManager.Instance.GetOneInAllSheepFarm(factoryCount);
                 //Text costText = addFactoryBtn.transform.GetComponentInChildren<Text>();
                 //costText.text = GameUtils.currencyToString(userSheepFarm.ActivePrice);
 
@@ -231,10 +233,6 @@ namespace Project_Data.Scripts
 
             bottomBar.SetActive(true);
 
-
-
-
-
             //Lần đầu thì hiển thị hướng dẫn
             if (!PlayerPrefs.HasKey("IsFirstKReaches"))
             {
@@ -242,8 +240,8 @@ namespace Project_Data.Scripts
             }
 
             PlayerPrefs.SetInt("IsFirstKReaches", 1);
-
         }
+
         public void ShowBalance()
         {
             double earning = UserDataManager.Instance.GetuserHashRate();
@@ -256,47 +254,62 @@ namespace Project_Data.Scripts
             double balanceSheepTon = UserDataManager.Instance.GetBalanceSheepCoin();
             balanceSheepCoinText.text = balanceSheepTon.ToString("F8");
 
+            long timeToEndSpecial = UserDataManager.Instance.UserData.timeToEndSpecial;
+            if (timeToEndSpecial > 0)
+            {
+                SpecialPackagesBtn.SetActive(true);
+            }
+            else
+            {
+                SpecialPackagesBtn.SetActive(false);
+            }
+        }
+
+        public void ShowPakages()
+        {
+            SpecialPackagesPanel.SetActive(true);
         }
 
         public string GetBalanceTon()
         {
             return balanceTonText.text;
         }
+
         public string GetBalanceSheepCoin()
         {
             return balanceSheepCoinText.text;
         }
+
         /// <summary>
         /// Load data từ serever
         /// </summary>
         public void LoadDataServer()
         {
-
             ShowBalance();
-            //Load farm
             CreateFarm();
 
-            PriceUpdareText.text =UserDataManager.Instance.UpgradefarmPrice().ToString();
-            //Load Thang may1
+            PriceUpdareText.text = UserDataManager.Instance.UpgradefarmPrice().ToString();
             liftHandler.LoadData();
-            //Load shop
             wareHouseHandler.LoadShop();
-
         }
+
         public void playCoinBounceEffect()
         {
             balanceTonText.transform.parent.Find("coin").DOPunchScale(new Vector3(1.1f, 1.1f, 1.1f), 0.5f);
         }
+
         public void addBallanceTon()
         {
             double balanceTon = UserDataManager.Instance.GetBalanceTon();
             balanceTonText.text = balanceTon.ToString("F8");
         }
+
         public void addBallanceSheepTon()
         {
             double balanceTon = UserDataManager.Instance.GetBalanceSheepCoin();
             balanceSheepCoinText.text = balanceTon.ToString("F8");
         }
+
         public void addCash(double cash)
         {
             totalCash += cash;
@@ -350,27 +363,28 @@ namespace Project_Data.Scripts
                 totalCash = cash;
             }
         }
+
         /// <summary>
         /// Thêm 1 mảnh đất mới
         /// </summary>
         /// <param name="isNew"></param>
-        public void addOldFactory(bool isNew, int sheepFarmId=-1)
+        public void addOldFactory(bool isNew, int sheepFarmId = -1)
         {
-          
             addNewFactory(isNew, false, sheepFarmId);
-
         }
-        
+
         public void addFactory(bool isNew)
         {
             addNewFarm(isNew, false, -1);
         }
+
         public void addServerFactory()
         {
             int index = UserDataManager.Instance.GetindexFarm();
             double price = UserDataManager.Instance.UpgradefarmPrice();
             tonConnectWallet.ActiveFarm(price, index);
         }
+
         //public void addFactoryWithBags()
         //{
         //    addNewFactory(true, true);
@@ -378,13 +392,13 @@ namespace Project_Data.Scripts
 
         private void addNewFarm(bool isNew, bool isBag = false, int sheepFarmId = -1)
         {
-          //  Debug.Log("mua dat ");
+            //  Debug.Log("mua dat ");
             SoundManager.Instance.PlayClickSound();
             int indexSheep = UserDataManager.Instance.GetSheepFarms().Count + 1;
             //Debug.Log("indexSheep  "+ indexSheep);
             buyManager.BuyFarm(indexSheep, () =>
             {
-              //  Debug.Log("mua OK ");
+                //  Debug.Log("mua OK ");
                 //Tạo 1 trang trại
                 GameObject factory = GameObject.Instantiate(factoryPrefab, scrollView.content.Find("Factories"));
                 factory.SetActive(true);
@@ -400,7 +414,7 @@ namespace Project_Data.Scripts
                 //Set lại vi trí cho farm mới
                 pos = new Vector3(pos.x, pPos.y - farmHeight, pos.z);
                 factory.transform.localPosition = pos;
-                //Tăng số lượng farm 
+                //Tăng số lượng farm
                 factoryCount++;
 
                 //Tính lại vị trí farmHeight
@@ -413,14 +427,12 @@ namespace Project_Data.Scripts
                     farmHeight = factoryCount == 0 ? 0f : 300f;
                 }
 
-
                 //Tính lại vị trí cho 2 nút bâm mua hàng
                 addFactoryBtn.transform.localPosition = new Vector3(addFactoryBtn.transform.localPosition.x, pos.y - farmHeight, addFactoryBtn.transform.localPosition.z);
                 //unlockWithBags.transform.localPosition = new Vector3(unlockWithBags.transform.localPosition.x, pos.y - farmHeight + 26f, unlockWithBags.transform.localPosition.z);
 
                 factory.GetComponent<FactoryHandler>().getDataFarmTonServer(indexSheep);
                 factory.GetComponent<FactoryHandler>().setWorkerWorkSpeed(1.0f);
-
 
                 //lưu vô danh sách nhà máy xử lý
                 factoryList.Add(factory.GetComponent<FactoryHandler>());
@@ -430,27 +442,24 @@ namespace Project_Data.Scripts
                 {
                     addFactoryBtn.SetActive(false);
                 }
-
             });
         }
 
-        private void addNewFactory(bool isNew, bool isBag = false,int sheepFarmId=-1)
+        private void addNewFactory(bool isNew, bool isBag = false, int sheepFarmId = -1)
         {
             if (isNew)
             {
                 //Bật âm thanh
                 SoundManager.Instance.PlayClickSound();
 
-
                 //Debug.Log("Gamemanager  tutorialManager");
                 if (!tutorialManager.isTutorialCompleted())
                 {
-                  //  Debug.Log("TutorialManager bat dau");
+                    //  Debug.Log("TutorialManager bat dau");
                     tutorialManager.updateStep(TutorialStep.FarmerWork);
                 }
-                   
             }
-           
+
             //Tạo 1 trang trại
             GameObject factory = GameObject.Instantiate(factoryPrefab, scrollView.content.Find("Factories"));
             factory.SetActive(true);
@@ -458,7 +467,7 @@ namespace Project_Data.Scripts
             //Lấy giá trị trang trại trước đó
             GameObject prevFactory = factoryCount == 0 ? factory : factoryList[factoryCount - 1].gameObject;
             //Lấy vi tri x,y trang trai truóc đó
-            Vector3 pos  = factory.transform.localPosition;
+            Vector3 pos = factory.transform.localPosition;
             Vector3 pPos = prevFactory.transform.localPosition;
             float farmHeight = 0;
 
@@ -468,7 +477,7 @@ namespace Project_Data.Scripts
             //Set lại vi trí cho farm mới
             pos = new Vector3(pos.x, pPos.y - farmHeight, pos.z);
             factory.transform.localPosition = pos;
-            //Tăng số lượng farm 
+            //Tăng số lượng farm
             factoryCount++;
 
             //Tính lại vị trí farmHeight
@@ -481,7 +490,6 @@ namespace Project_Data.Scripts
                 farmHeight = factoryCount == 0 ? 0f : 300f;
             }
 
-           
             //Tính lại vị trí cho 2 nút bâm mua hàng
             addFactoryBtn.transform.localPosition = new Vector3(addFactoryBtn.transform.localPosition.x, pos.y - farmHeight, addFactoryBtn.transform.localPosition.z);
             //unlockWithBags.transform.localPosition = new Vector3(unlockWithBags.transform.localPosition.x, pos.y - farmHeight + 26f, unlockWithBags.transform.localPosition.z);
@@ -490,8 +498,6 @@ namespace Project_Data.Scripts
             int indexSheep = UserDataManager.Instance.GetSheepFarms().Count + 1;
             if (isNew) //Tao moi lay tu thong tin chung
             {
-
-                
                 //Lấy thông tin profit level tu
                 factory.GetComponent<FactoryHandler>().getDataFarmTonServer(indexSheep);
                 factory.GetComponent<FactoryHandler>().setWorkerWorkSpeed(1.0f);
@@ -502,7 +508,6 @@ namespace Project_Data.Scripts
                 factory.GetComponent<FactoryHandler>().getDataFarmTonServer(sheepFarmId);
                 factory.GetComponent<FactoryHandler>().setWorkerWorkSpeed(1.0f);
             }
-           
 
             //lưu vô danh sách nhà máy xử lý
             factoryList.Add(factory.GetComponent<FactoryHandler>());
@@ -522,10 +527,9 @@ namespace Project_Data.Scripts
             //{
             //    buyManager.BuyFarm(indexSheep);
             //}
-
         }
 
-        bool checkIfNextBridge()
+        private bool checkIfNextBridge()
         {
             if (factoryCount != 0 && factoryCount % 5 == 0)
             {
@@ -557,8 +561,6 @@ namespace Project_Data.Scripts
             txtToast.text = message;
             faileWithdrawToast.SetActive(true);
         }
-
-
 
         public void showCheatPanel()
         {
@@ -601,9 +603,9 @@ namespace Project_Data.Scripts
             return earningPerSec;
         }
 
-        void OnApplicationQuit()
+        private void OnApplicationQuit()
         {
-           // saveGame();
+            // saveGame();
         }
 
         //void OnApplicationPause(bool pauseStatus)
@@ -646,16 +648,16 @@ namespace Project_Data.Scripts
         {
             string postFix = worldIndex == 0 ? "" : worldIndex + "";
             int count = UserDataManager.Instance.GetNumberSheepFarms();
-         
-            if (count == 0){
 
+            if (count == 0)
+            {
                 count = 1;
             }
 
             //Nếu chưa hoàn tất hướng dẫn thì hiện
             if (!tutorialManager.isTutorialCompleted())
             {
-               // Debug.Log("1. TutorialManager bat dau tư gamemanager");
+                // Debug.Log("1. TutorialManager bat dau tư gamemanager");
                 PlayerPrefs.SetInt("isFisrt", 1);
                 tutorialManager.updateStep(TutorialStep.FarmerWork);
             }
@@ -667,14 +669,13 @@ namespace Project_Data.Scripts
                 totalCash = maxCash;
             }
 
-           // addCash(0);
+            // addCash(0);
 
             string totalBagStr = PlayerPrefs.GetString("TotalBags", totalBags.ToString());
             totalBags = double.Parse(totalBagStr);
-           // addBags(0);
+            // addBags(0);
 
-
-            //Tao lại farm đã mua 
+            //Tao lại farm đã mua
             //for (int i = 0; i < count; i++)
             //{
             //    addFactory(false);
@@ -688,9 +689,9 @@ namespace Project_Data.Scripts
             managerSelection.recalculateTimers();
             //bridgeManager.recalculateTimers();
         }
-        void CreateFarm()
-        {
 
+        private void CreateFarm()
+        {
             factoryList = new List<FactoryHandler>();
             factoryCount = 0;
             try
@@ -700,7 +701,11 @@ namespace Project_Data.Scripts
                     // Xóa tất cả các đối tượng hiện tại
                     foreach (GameObject instance in instances)
                     {
-                        Destroy(instance);
+                        if (instance != null)
+                        {
+                            // Hủy đối tượng nông trại
+                            Destroy(instance);
+                        }
                     }
 
                     // Xóa danh sách cũ để tạo lại danh sách mới
@@ -710,23 +715,16 @@ namespace Project_Data.Scripts
                 List<UserSheepFarm> userSheepFarms = UserDataManager.Instance.GetSheepFarms();
                 if (userSheepFarms.Count > 0)
                 {
-
                     foreach (UserSheepFarm item in userSheepFarms)
                     {
                         addOldFactory(false, item.SheepFarmId);
                     }
-
                 }
-
-
             }
             catch { }
-
-            
-
         }
 
-        void recalculateBoostDuration()
+        private void recalculateBoostDuration()
         {
             boostDuration = PlayerPrefs.GetFloat("BoostTime", 0);
 
@@ -797,7 +795,7 @@ namespace Project_Data.Scripts
                     break;
                 }
             }
-        
+
             congratsHudAdBoost.openPanelForAdBoost(boostDuration / 60f / 60f);
             PlayerPrefs.SetFloat("BoostTime", boostDuration);
         }
@@ -853,10 +851,12 @@ namespace Project_Data.Scripts
             PlayerPrefs.SetInt("SET_MAX_LEVEL", 1000);
             SceneManager.LoadScene(0);
         }
+
         //popup
         public void OpenPopUp(int type)
         {
-            if (type==0) {
+            if (type == 0)
+            {
                 taskPanel.SetActive(true);
                 invitePanel.SetActive(false);
                 wallettaskPanel.SetActive(false);
@@ -865,9 +865,8 @@ namespace Project_Data.Scripts
                 //btnBootom[type+1].GetComponent<Image>().sprite = Imagebtn[3];
                 //btnBootom[type+2].GetComponent<Image>().sprite = Imagebtn[5];
                 //btnBootom[type+3].GetComponent<Image>().sprite = Imagebtn[7];
-
             }
-            else if(type==1)
+            else if (type == 1)
             {
                 taskPanel.SetActive(false);
                 invitePanel.SetActive(true);
@@ -877,7 +876,7 @@ namespace Project_Data.Scripts
                 //btnBootom[type + 1].GetComponent<Image>().sprite = Imagebtn[5];
                 //btnBootom[type + 2].GetComponent<Image>().sprite = Imagebtn[7];
             }
-            else if(type == 2)
+            else if (type == 2)
             {
                 taskPanel.SetActive(false);
                 invitePanel.SetActive(false);
@@ -887,7 +886,7 @@ namespace Project_Data.Scripts
                 //btnBootom[type - 1].GetComponent<Image>().sprite = Imagebtn[5];
                 //btnBootom[type + 1].GetComponent<Image>().sprite = Imagebtn[7];
             }
-            else 
+            else
             {
                 taskPanel.SetActive(false);
                 invitePanel.SetActive(false);
@@ -897,11 +896,6 @@ namespace Project_Data.Scripts
                 //btnBootom[type - 2].GetComponent<Image>().sprite = Imagebtn[5];
                 //btnBootom[type -1].GetComponent<Image>().sprite = Imagebtn[7];
             }
-
-
-
         }
-    
-        
     }
 }

@@ -48,8 +48,12 @@ public class ObjectPooler : MonoBehaviour
     // Function to return an object to the pool
     public void ReturnObjectToPool(GameObject obj)
     {
-        obj.SetActive(false);
-        obj.transform.SetParent(productParents.transform);
-        poolObjects.Enqueue(obj);
+        if (obj != null)
+        {
+            obj.SetActive(false);
+            obj.transform.SetParent(productParents.transform);
+            poolObjects.Enqueue(obj);
+        }
+       
     }
 }

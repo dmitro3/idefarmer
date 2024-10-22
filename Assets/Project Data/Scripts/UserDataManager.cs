@@ -65,6 +65,7 @@ public class User
     public string refId { get; set; }
     public string refCode { get; set; }
     public string userName { get; set; }
+    public bool isBoughtCombo { get; set; }
 }
 
 public class UserBalance
@@ -149,6 +150,7 @@ public class UserData
     public List<UserTruck> userTruck { get; set; }
     public List<UserConveyor> userConveyor { get; set; }
     public int countRef { get; set; }
+    public long timeToEndSpecial { get; set; }
 }
 public class UserDataManager : MonoBehaviour
 {

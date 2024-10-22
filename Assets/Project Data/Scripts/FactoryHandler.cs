@@ -128,7 +128,7 @@ namespace Project_Data.Scripts
         private double basePrice = 1.20;
         private double currentBalance = 0.0;
         private List<GameObject> instances = new List<GameObject>(); // Danh sách lưu trữ các đối tượng đã được tạo
-
+        public GameObject bannerRow;
         void Start ()
         {
             baseHashrate = 0.2142857143;
@@ -150,7 +150,8 @@ namespace Project_Data.Scripts
             currencyImage.sprite = Sprite.Create(tex, new Rect(0.0f, 0.0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100.0f);
             //Kiếm kinh nghiệm
             earningExp += worldIndex * .05;
-
+            bannerRow.SetActive(false);
+         
 
 
             workerParent = gameObject;
@@ -272,6 +273,10 @@ namespace Project_Data.Scripts
 
         void LoadBanlanceOneFarm()
         {
+            if (index == 1)
+            {
+                bannerRow.SetActive(true);
+            }
             currentBalance = 0.0;
           
             UserSheepFarm userSheepFarm= UserDataManager.Instance.GetOneSheepFarm(index);

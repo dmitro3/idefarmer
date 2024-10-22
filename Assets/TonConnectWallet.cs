@@ -193,6 +193,37 @@ public class TonConnectWallet : MonoBehaviour
         BuyFarmTool(addressReceiver, amount, data);
     }
 
+    //BuyPackage
+    public void BuyPakage(int index)
+    {
+
+        double coins = 0.0f;
+        //Kiem tra ví
+        if (UserDataManager.Instance.walletAddress.Trim().Length <= 0)
+        {
+            OpenConnect();
+            return;
+        }
+
+        if (index == 1)
+        {
+            coins = 55;
+        }
+        else if (index == 2)
+        {
+            coins = 149;
+        }
+        else {
+            coins = 249;
+        }
+        string type = "6"; 
+        string data = UserDataManager.Instance.UserData.user.id + "," + type + "," + index + "";
+        string addressReceiver = DataConfig.addressReceiver;
+        string amount = (coins * Math.Pow(10, 9)).ToString().Replace(",", ".");
+        BuyFarmTool(DataConfig.addressReceiver, amount, data);
+
+    }
+
     #endregion
 
 
