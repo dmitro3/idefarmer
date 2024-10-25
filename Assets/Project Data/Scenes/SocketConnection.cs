@@ -9,10 +9,9 @@ using Project_Data.Scripts;
 using System.Reflection;
 public class SocketConnection : MonoBehaviour
 {
-    // URL của WebSocket server
-    private string serverUrl = "https://api.tonthesheep.com";  // Thay bằng URL server của bạn game.tonthesheep.com
+    // URL của WebSocket server THAT
+     private string serverUrl = "https://api.tonthesheep.com";  // Thay bằng URL server của bạn game.tonthesheep.com
     //<script src="https://cdn.socket.io/4.0.1/socket.io.js"></script>
-
     [DllImport("__Internal")]
     private static extern void socketConnect(string url, string token);
 
@@ -125,6 +124,7 @@ public class SocketConnection : MonoBehaviour
 
                 GameManager.Instance.LoadDataServer();
             });
+
             GameManager.Instance.ShowToast("Upgrade Successful");;
         }
         catch

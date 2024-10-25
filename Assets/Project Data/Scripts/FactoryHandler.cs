@@ -271,7 +271,13 @@ namespace Project_Data.Scripts
             seq.SetLoops(-1);
         }
 
-        void LoadBanlanceOneFarm()
+        public void LoadData()
+        {
+            LoadBanlanceOneFarm();
+            managerPopupCloseCB();
+            levelText.text = "Level\n" + (level);
+        }
+        public void LoadBanlanceOneFarm()
         {
             if (index == 1)
             {
@@ -280,25 +286,14 @@ namespace Project_Data.Scripts
             currentBalance = 0.0;
           
             UserSheepFarm userSheepFarm= UserDataManager.Instance.GetOneSheepFarm(index);
-          //  UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
             if (userSheepFarm != null){
 
                 currentBalance = userSheepFarm.Balance;
             }
-            //if (userConveyor != null)
-            //{
-            //    hashRateConveyor = userConveyor.HashRate;
-            //}
-
-            ////hashrate trại cừu - hashrate băng chuyền<0 băng chuyền đang tải > trại cừu, tồn kho = 0
-            ////hashrate trại cừu - hashrate băng chuyền > 0 băng chuyền đang tải<trại cừu, tồn kho = hashRate chênh lệch *thời gian(note lại)
-            //if (hashRateFarm - hashRateConveyor> 0){
-
-            //    UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
-            //    long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            //    currentBalance = (hashRateFarm - hashRateConveyor) * ((currentTime - userBalance.lastUpdate) / 1000 / 86400);
-            //}
+         
             framBalanceText.text=currentBalance.ToString("F8");
+          
+
         }
         void IncreaBalance()
         {
@@ -696,13 +691,7 @@ namespace Project_Data.Scripts
 
             GameManager.Instance.tonConnectWallet.DepositHiredSheep(index);
             GameManager.Instance.tutorialManager.updateStep(TutorialStep.OpenLevelUpPopup);
-            //GameManager.Instance.buyManager.BuyManagerSheep(index, () =>
-            //{
-            //    GameManager.Instance.hireManager.ClosePopup();
-            //    hasManager = true;
-            //    addManagerBtn.gameObject.SetActive(false);
-            //    managerObject.SetActive(true);
-            //});
+
         }
 
 
@@ -710,57 +699,7 @@ namespace Project_Data.Scripts
         {
 
 
-            //if (level >= GameManager.MAX_LEVEL)
-            //{
-            //    GameManager.Instance.ShowToast("You have reached max level");
-            //}
-
-
-            //double cc = 0;
-
-
-            //double newEarning = 0;
-            //double newHarvestSpeed = 0;
-            //int newWorkerCount = 0;
-            //double harvestSpeed = earning / workerWorkTime;
-
-            //double bonusMul = Math.Pow(baseBonusMultiplier, GameUtils.getUpgradeCount(level) + 1);
-
-            //Tinh theo cong thuc o day
-            // double hashCurrentRate = 0, hashNextRate = 0;
-
-            //double currenthashRate = 0, newthashRate = 0, priceTon = 0;
-            //Debug.Log("index hien tai " + index);
-            //Debug.Log("level hien tai " + level);
-            //double basePricetmp = basePrice;
-            //double baseHashratetmp = baseHashrate;
-            //if (index > 1)
-            //{
-            //    basePricetmp = basePricetmp * Math.Pow(1.25, index - 1);
-            //    baseHashratetmp = baseHashrate * Math.Pow(1.25, index - 1);
-            //}
-
-            //if (level == 0)
-            //{
-            //    currenthashRate = 0.018;
-            //    priceTon = basePricetmp;
-            //    newthashRate = baseHashratetmp;
-            //}
-            //else if (level == 1)
-            //{
-            //    currenthashRate = baseHashratetmp;
-            //    newthashRate = baseHashratetmp * Math.Pow(1.5, ((level + 1) - 1));
-            //    priceTon = basePricetmp * Math.Pow(1.5, ((level + 1) - 1));
-            //}
-            //else
-            //{
-            //    currenthashRate = baseHashratetmp * Math.Pow(1.5, (level - 1)); ;
-            //    newthashRate = baseHashratetmp * Math.Pow(1.5, ((level + 1) - 1));
-            //    priceTon = basePricetmp * Math.Pow(1.5, ((level + 1) - 1));
-            //}
             int multiplier = getMaxMultiplier();
-            //Debug.Log("index farm " + index);
-            //Debug.Log("index farm getMaxMultiplier " + multiplier); 
             double roiBase = 142.8, rateRoi = 2.5;
             double currenthashRate = 0, newthashRate = 0, upgradePrice = 0, roi = 0.0, newroi = 0.0, currenthashRateSheep = 0.0, newhashRateSheep = 0.0;
             if (UserDataManager.Instance.UserData.userSheepFarms != null)
@@ -1006,6 +945,10 @@ namespace Project_Data.Scripts
             //    level = GameManager.MAX_LEVEL;
             //}
         }
+        public void UpdateIndex(int sheepFarmId)
+        {
+            this.index = sheepFarmId;
+        }
         public void getDataFarmTonServer(int sheepFarmId)
         {
 
@@ -1019,18 +962,8 @@ namespace Project_Data.Scripts
                 Shepherd = userSheepFarm.Shepherd;
                 UpgradePrice = userSheepFarm.UpgradePrice;
             }
-
-
-            // string profitStr = PlayerPrefs.GetString("Factory" + index + "profits" + postFix, "0");
-            //string levelStr = PlayerPrefs.GetString("Factory" + index + "level" + postFix, "1");
-
             profits = 0;
-            //if (level > GameManager.MAX_LEVEL)
-            //{
-            //    level = GameManager.MAX_LEVEL;
-            //}
         }
-
         public IEnumerator managerAnimation()
         {
             while (true)

@@ -155,32 +155,10 @@ namespace Project_Data.Scripts
         void LoadBanlance()
         {
             currentBalance = 0.0;
-          //  double hashRateConveyor = 0.0, hashRateTruck = 0.0 ;
 
             UserConveyor userConveyor = UserDataManager.Instance.GetOneUserConveyor();
             currentBalance = userConveyor.Balance;
-            //UserTruck userTruck = UserDataManager.Instance.GetOneUserTruck();
-
-            //if (userConveyor != null)
-            //{
-            //    hashRateConveyor = userConveyor.HashRate;
-            //}
-
-            //if (userTruck != null)
-            //{
-            //    hashRateTruck = userTruck.HashRate;
-            //}
-
-            ////balance băng chuyền: hashrate băng chuyền - hashrate xe tải<0 balance = 0
-            ////hashrate băng chuyền - hashrate xe tải > 0 balance = hashRate chênh lệch *thời gian
-
-            //if (hashRateConveyor - hashRateTruck > 0)
-            //{
-
-            //    UserBalance userBalance = UserDataManager.Instance.UserData.userBalances[0];
-            //    long currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            //    currentBalance = (hashRateConveyor - hashRateTruck) * ((currentTime - userBalance.lastUpdate) / 1000 / 86400);
-            //}
+            
 
             liftBalanceText.text = currentBalance.ToString("F8");
         }
