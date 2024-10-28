@@ -590,12 +590,13 @@ namespace Project_Data.Scripts
 
             //Lay tu backend
             double roiBase = 142.8, rateRoi = 2.5;
-            double currenthashRate = 0, newthashRate = 0, upgradePrice = 0,roi=0.0,newroi=0.0, currenthashRateSheep=0.0, newhashRateSheep = 0.0;
+            double UiHashRate=0, currenthashRate = 0, newthashRate = 0, upgradePrice = 0,roi=0.0,newroi=0.0, currenthashRateSheep=0.0, newhashRateSheep = 0.0;
             if (UserDataManager.Instance.UserData.userConveyor != null)
             {
                 if (UserDataManager.Instance.UserData.userConveyor.Count > 0)
                 {
                     UserConveyor userConveyor = UserDataManager.Instance.UserData.userConveyor[0];
+                    UiHashRate = userConveyor.UiHashRate;
                     roi = roiBase + levelLisft * rateRoi;
                     if (multiplier ==1)
                     {
@@ -632,7 +633,7 @@ namespace Project_Data.Scripts
             //Debug.Log("nhanangcap");
 
 
-            GameManager.Instance.truckLevelPopup.showPopup(1, upgradePrice, currenthashRate, newthashRate,
+            GameManager.Instance.truckLevelPopup.showPopup(1, upgradePrice, UiHashRate, newthashRate,
                 getEarningPerSec(), 1, liftMoveSpeed, loadingSpeedPerSec, totalLoadCanBear,
                 0.0,0, 0.0f, 0.0, getIncrementedEarning() - totalLoadCanBear,
                 0.0f, levelLisft, multiplier, "Lift", roi, newroi, currenthashRateSheep, newhashRateSheep);

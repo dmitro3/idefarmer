@@ -10,7 +10,10 @@ using System.Reflection;
 public class SocketConnection : MonoBehaviour
 {
     // URL của WebSocket server THAT
-     private string serverUrl = "https://api.tonthesheep.com";  // Thay bằng URL server của bạn game.tonthesheep.com
+    private string serverUrl = "https://api.tonthesheep.com";  // Thay bằng URL server của bạn game.tonthesheep.com
+    // TEST
+    //private string serverUrl = "https://3a6097bd7a2d.ngrok.app";  // Thay bằng URL server của bạn game.tonthesheep.com
+
     //<script src="https://cdn.socket.io/4.0.1/socket.io.js"></script>
     [DllImport("__Internal")]
     private static extern void socketConnect(string url, string token);

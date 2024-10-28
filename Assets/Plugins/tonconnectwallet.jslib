@@ -177,12 +177,15 @@ InitializeTonConnect: function () {
              // Trigger a Unity callback to pass the received message
              unityInstanceRef.SendMessage("SocketIOClient", "ActiveFarmOnMessageReceived", res);
         });
+		
 		 socket.on('boughtSpecialPackage', function (res) {
              //console.log("BuyPackageOnMessageReceived Message received: ");
              // Trigger a Unity callback to pass the received message
              unityInstanceRef.SendMessage("SocketIOClient", "BuyPackageOnMessageReceived", res);
         });
-		
+		 socket.on('gameRealTime', function (res) {
+             unityInstanceRef.SendMessage("PaymentAnimation", "OnReceiveAccountName", res);
+        });
 		
 		
 

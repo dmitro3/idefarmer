@@ -9,6 +9,8 @@ public class DataConfig
     public static string addressReceiver = "UQBYLNmEIjlB3ESpbUPP8t5mg0jv7oHeSXBb0Ldn29ptUQ0T";
     public static string linkref = "https://t.me/tonthesheep_bot/game?startapp=";
     public static string token = "";
+    //Test
+    //public static string API = "https://3a6097bd7a2d.ngrok.app/api/"; //API lấy data
     //That
     public static string API = "https://api.tonthesheep.com/api/"; //API lấy data
     public static string USER_DATA_METHOD = "user/user-data"; //API lấy data

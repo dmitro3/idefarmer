@@ -20,14 +20,12 @@ public class DataItem
     public double Amount { get; set; }
     public string Address { get; set; }
     public string Status { get; set; }
-    public string TransactionHash { get; set; }
     public bool AutomationTransfer { get; set; }
     public DateTime? CreatedAt { get; set; }
-    public DateTime? SucceededAt { get; set; }
-    public string QueryId { get; set; }
     public bool Processed { get; set; }
     public bool WasRecreated { get; set; }
-    public long ProcessedAt { get; set; }
+
+
 }
 
 public class TotalData
@@ -102,6 +100,7 @@ public class UserConveyor
     public int Level { get; set; }                       // Cấp độ hiện tại
     public double UpgradePrice { get; set; }             // Giá nâng cấp
     public double HashRate { get; set; }                 // Tốc độ băm hiện tại
+    public double UiHashRate { get; set; }
     public double ROI { get; set; }                      // Tỷ suất lợi nhuận đầu tư
     public double HashRate1Lv { get; set; }              // Tốc độ băm cho cấp độ 1
     public double HashRate3Lv { get; set; }              // Tốc độ băm cho cấp độ 3
